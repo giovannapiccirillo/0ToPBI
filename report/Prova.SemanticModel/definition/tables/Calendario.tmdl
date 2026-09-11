@@ -1,0 +1,55 @@
+table Calendario
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		isKey
+		summarizeBy: none
+		sourceColumn: Date
+
+	column Anno
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: Anno
+
+	column 'Mese Numero'
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: Mese Numero
+
+	column Mese
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Mese
+		sortByColumn: 'Mese Numero'
+
+	column AnnoMese
+		dataType: string
+		summarizeBy: none
+		sourceColumn: AnnoMese
+		sortByColumn: 'Mese Numero'
+
+	hierarchy 'Anno - Mese'
+
+		level Anno
+			column: Anno
+
+		level Mese
+			column: Mese
+
+	partition Calendario = m
+		mode: import
+		source =
+				let
+					MinDate = #date(2024, 1, 1),
+					MaxDate = #date(2025, 12, 31),
+					Dates = List.Dates(MinDate, Duration.Days(MaxDate - MinDate) + 1, #duration(1, 0, 0, 0)),
+					ToTable = Table.FromList(Dates, Splitter.SplitByNothing(), {"Date"}),
+					TypedDate = Table.TransformColumnTypes(ToTable, {{"Date", type datetime}}),
+					AddAnno = Table.AddColumn(TypedDate, "Anno", each Date.Year([Date]), Int64.Type),
+					AddMeseNumero = Table.AddColumn(AddAnno, "Mese Numero", each Date.Month([Date]), Int64.Type),
+					AddMese = Table.AddColumn(AddMeseNumero, "Mese", each Date.MonthName([Date]), type text),
+					AddAnnoMese = Table.AddColumn(AddMese, "AnnoMese", each Text.From([Anno]) & "-" & Text.PadStart(Text.From([Mese Numero]), 2, "0"), type text)
+				in
+					AddAnnoMese

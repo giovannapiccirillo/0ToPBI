@@ -1,0 +1,31 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "6a79535eca5bc1b2bdfa",
+  "position": { "x": 32, "y": 96, "z": 2000, "height": 80, "width": 240, "tabOrder": 2000 },
+  "visual": {
+    "visualType": "slicer",
+    "syncGroup": {
+      "groupName": "SyncPeriodo",
+      "fieldChanges": true,
+      "filterChanges": true
+    },
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [{
+            "field": { "Column": { "Expression": { "SourceRef": { "Entity": "Calendario" } }, "Property": "Anno" } },
+            "queryRef": "Calendario.Anno",
+            "nativeQueryRef": "Anno"
+          }]
+        }
+      }
+    },
+    "objects": {
+      "data": [{ "properties": { "mode": { "expr": { "Literal": { "Value": "'Dropdown'" } } } } }],
+      "header": [{ "properties": {
+        "show": { "expr": { "Literal": { "Value": "true" } } },
+        "text": { "expr": { "Literal": { "Value": "'Anno'" } } }
+      }}]
+    }
+  }
+}

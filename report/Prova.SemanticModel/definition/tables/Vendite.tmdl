@@ -1,0 +1,90 @@
+table Vendite
+
+	column OrderID
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: OrderID
+
+	column OrderDate
+		dataType: dateTime
+		isHidden
+		summarizeBy: none
+		sourceColumn: OrderDate
+
+	column ProductID
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: ProductID
+
+	column CustomerName
+		dataType: string
+		summarizeBy: none
+		sourceColumn: CustomerName
+
+	column Region
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Region
+
+	column Quantity
+		dataType: double
+		isHidden
+		summarizeBy: none
+		sourceColumn: Quantity
+
+	column UnitPrice
+		dataType: double
+		isHidden
+		summarizeBy: none
+		sourceColumn: UnitPrice
+
+	column Discount
+		dataType: double
+		isHidden
+		summarizeBy: none
+		sourceColumn: Discount
+
+	measure 'Fatturato Totale' = SUMX ( Vendite, Vendite[Quantity] * Vendite[UnitPrice] * ( 1 - Vendite[Discount] ) )
+		formatString: #,0.00 €
+
+	measure 'Quantità Totale Venduta' = SUM ( Vendite[Quantity] )
+		formatString: #,0
+
+	measure 'Sconto Medio %' = DIVIDE ( SUMX ( Vendite, Vendite[Quantity] * Vendite[UnitPrice] * Vendite[Discount] ), SUMX ( Vendite, Vendite[Quantity] * Vendite[UnitPrice] ) )
+		formatString: 0.00%
+
+	measure 'Costo Totale' = SUMX ( Vendite, Vendite[Quantity] * RELATED ( Prodotti[UnitCost] ) )
+		formatString: #,0.00 €
+
+	measure Margine = [Fatturato Totale] - [Costo Totale]
+		formatString: #,0.00 €
+
+	measure 'Margine %' = DIVIDE ( [Margine], [Fatturato Totale] )
+		formatString: 0.00%
+
+	measure 'Fatturato YTD' = TOTALYTD ( [Fatturato Totale], Calendario[Date] )
+		formatString: #,0.00 €
+
+	measure 'Var. % Fatturato MoM' = DIVIDE ( [Fatturato Totale] - CALCULATE ( [Fatturato Totale], DATEADD ( Calendario[Date], -1, MONTH ) ), CALCULATE ( [Fatturato Totale], DATEADD ( Calendario[Date], -1, MONTH ) ) )
+		formatString: 0.00%
+
+	measure 'Var. % Fatturato YoY' = DIVIDE ( [Fatturato Totale] - CALCULATE ( [Fatturato Totale], SAMEPERIODLASTYEAR ( Calendario[Date] ) ), CALCULATE ( [Fatturato Totale], SAMEPERIODLASTYEAR ( Calendario[Date] ) ) )
+		formatString: 0.00%
+
+	measure 'Numero Ordini' = DISTINCTCOUNT ( Vendite[OrderID] )
+		formatString: #,0
+
+	measure 'Valore Medio Ordine' = DIVIDE ( [Fatturato Totale], [Numero Ordini] )
+		formatString: #,0.00 €
+
+	partition Vendite = m
+		mode: import
+		source =
+				let
+					Source = Csv.Document(File.Contents("C:\Users\mar.colotti\Desktop\Power BI Expert\AcceleratorePBI\staging\Report Vendite Mensile per il Management\vendite.csv"),[Delimiter=",", Columns=8, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+					PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+					ChangedType = Table.TransformColumnTypes(PromotedHeaders,{{"OrderID", type text}, {"OrderDate", type datetime}, {"ProductID", type text}, {"CustomerName", type text}, {"Region", type text}, {"Quantity", type number}, {"UnitPrice", type number}, {"Discount", type number}})
+				in
+					ChangedType

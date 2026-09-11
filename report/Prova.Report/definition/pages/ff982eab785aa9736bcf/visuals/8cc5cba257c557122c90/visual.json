@@ -1,0 +1,99 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "8cc5cba257c557122c90",
+  "position": { "x": 1280, "y": 272, "z": 11000, "height": 728, "width": 608, "tabOrder": 11000 },
+  "visual": {
+    "visualType": "barChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [{
+            "field": { "Column": { "Expression": { "SourceRef": { "Entity": "Prodotti" } }, "Property": "Category" } },
+            "queryRef": "Prodotti.Category",
+            "nativeQueryRef": "Category",
+            "active": true
+          }]
+        },
+        "Y": {
+          "projections": [{
+            "field": { "Measure": { "Expression": { "SourceRef": { "Entity": "Vendite" } }, "Property": "Fatturato Totale" } },
+            "queryRef": "Vendite.Fatturato Totale",
+            "nativeQueryRef": "Fatturato Totale"
+          }]
+        },
+        "Tooltips": {
+          "projections": [{
+            "field": { "Measure": { "Expression": { "SourceRef": { "Entity": "Vendite" } }, "Property": "Margine %" } },
+            "queryRef": "Vendite.Margine %",
+            "nativeQueryRef": "Margine %"
+          }]
+        }
+      },
+      "sortDefinition": {
+        "sort": [{
+          "field": { "Measure": { "Expression": { "SourceRef": { "Entity": "Vendite" } }, "Property": "Fatturato Totale" } },
+          "direction": "Descending"
+        }],
+        "isDefaultSort": false
+      }
+    },
+    "objects": {
+      "dataPoint": [{
+        "properties": {
+          "fill": {
+            "solid": {
+              "color": {
+                "expr": {
+                  "FillRule": {
+                    "Input": {
+                      "Measure": {
+                        "Expression": { "SourceRef": { "Entity": "Vendite" } },
+                        "Property": "Fatturato Totale"
+                      }
+                    },
+                    "FillRule": {
+                      "linearGradient2": {
+                        "min": { "color": { "Literal": { "Value": "'#D2E8F4'" } } },
+                        "max": { "color": { "Literal": { "Value": "'#0072B2'" } } },
+                        "nullColoringStrategy": {
+                          "strategy": { "Literal": { "Value": "'noColor'" } }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "selector": {
+          "data": [{ "dataViewWildcard": { "matchingOption": 0 } }]
+        }
+      }]
+    },
+    "visualContainerObjects": {
+      "title": [{
+        "properties": {
+          "show": { "expr": { "Literal": { "Value": "true" } } },
+          "text": { "expr": { "Literal": { "Value": "'Fatturato per categoria (top categorie)'" } } },
+          "fontSize": { "expr": { "Literal": { "Value": "14D" } } },
+          "fontColor": { "solid": { "color": { "expr": { "Literal": { "Value": "'#252423'" } } } } }
+        }
+      }],
+      "general": [{
+        "properties": {
+          "altText": { "expr": { "Literal": { "Value": "'Grafico a barre orizzontali: fatturato totale per categoria di prodotto, ordinato in modo decrescente.'" } } }
+        }
+      }],
+      "padding": [{
+        "properties": {
+          "top": { "expr": { "Literal": { "Value": "8D" } } },
+          "bottom": { "expr": { "Literal": { "Value": "8D" } } },
+          "left": { "expr": { "Literal": { "Value": "8D" } } },
+          "right": { "expr": { "Literal": { "Value": "8D" } } }
+        }
+      }]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "38a1ca470f0a064d0d2a",
+  "position": { "x": 1104, "y": 96, "z": 8000, "height": 424, "width": 784, "tabOrder": 8000 },
+  "visual": {
+    "visualType": "barChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [{
+            "field": { "Column": { "Expression": { "SourceRef": { "Entity": "Prodotti" } }, "Property": "Category" } },
+            "queryRef": "Prodotti.Category",
+            "nativeQueryRef": "Category",
+            "active": true
+          }]
+        },
+        "Y": {
+          "projections": [{
+            "field": { "Measure": { "Expression": { "SourceRef": { "Entity": "Vendite" } }, "Property": "Margine %" } },
+            "queryRef": "Vendite.Margine %",
+            "nativeQueryRef": "Margine %"
+          }]
+        },
+        "Tooltips": {
+          "projections": [
+            {
+              "field": { "Measure": { "Expression": { "SourceRef": { "Entity": "Vendite" } }, "Property": "Fatturato Totale" } },
+              "queryRef": "Vendite.Fatturato Totale",
+              "nativeQueryRef": "Fatturato Totale"
+            },
+            {
+              "field": { "Measure": { "Expression": { "SourceRef": { "Entity": "Vendite" } }, "Property": "Margine %" } },
+              "queryRef": "Vendite.Margine %",
+              "nativeQueryRef": "Margine %"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [{
+          "field": { "Measure": { "Expression": { "SourceRef": { "Entity": "Vendite" } }, "Property": "Margine %" } },
+          "direction": "Descending"
+        }],
+        "isDefaultSort": false
+      }
+    },
+    "objects": {
+      "dataPoint": [{
+        "properties": {
+          "fill": {
+            "solid": {
+              "color": {
+                "expr": {
+                  "FillRule": {
+                    "Input": {
+                      "Measure": {
+                        "Expression": { "SourceRef": { "Entity": "Vendite" } },
+                        "Property": "Margine %"
+                      }
+                    },
+                    "FillRule": {
+                      "linearGradient2": {
+                        "min": { "color": { "Literal": { "Value": "'#F8D7DA'" } } },
+                        "max": { "color": { "Literal": { "Value": "'#C00000'" } } },
+                        "nullColoringStrategy": {
+                          "strategy": { "Literal": { "Value": "'noColor'" } }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "selector": {
+          "data": [{ "dataViewWildcard": { "matchingOption": 0 } }]
+        }
+      }]
+    },
+    "visualContainerObjects": {
+      "title": [{
+        "properties": {
+          "show": { "expr": { "Literal": { "Value": "true" } } },
+          "text": { "expr": { "Literal": { "Value": "'Margine % per categoria'" } } },
+          "fontSize": { "expr": { "Literal": { "Value": "14D" } } },
+          "fontColor": { "solid": { "color": { "expr": { "Literal": { "Value": "'#252423'" } } } } }
+        }
+      }],
+      "general": [{
+        "properties": {
+          "altText": { "expr": { "Literal": { "Value": "'Grafico a barre orizzontali: margine percentuale per categoria di prodotto, in ordine decrescente, con colore rosso.'" } } }
+        }
+      }],
+      "padding": [{
+        "properties": {
+          "top": { "expr": { "Literal": { "Value": "8D" } } },
+          "bottom": { "expr": { "Literal": { "Value": "8D" } } },
+          "left": { "expr": { "Literal": { "Value": "8D" } } },
+          "right": { "expr": { "Literal": { "Value": "8D" } } }
+        }
+      }]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

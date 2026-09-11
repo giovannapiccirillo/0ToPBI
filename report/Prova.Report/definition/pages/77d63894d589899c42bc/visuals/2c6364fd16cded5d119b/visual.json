@@ -1,0 +1,31 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "2c6364fd16cded5d119b",
+  "position": { "x": 32, "y": 288, "z": 4000, "height": 80, "width": 240, "tabOrder": 4000 },
+  "visual": {
+    "visualType": "slicer",
+    "syncGroup": {
+      "groupName": "SyncCategoria",
+      "fieldChanges": true,
+      "filterChanges": true
+    },
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [{
+            "field": { "Column": { "Expression": { "SourceRef": { "Entity": "Prodotti" } }, "Property": "Category" } },
+            "queryRef": "Prodotti.Category",
+            "nativeQueryRef": "Category"
+          }]
+        }
+      }
+    },
+    "objects": {
+      "data": [{ "properties": { "mode": { "expr": { "Literal": { "Value": "'Dropdown'" } } } } }],
+      "header": [{ "properties": {
+        "show": { "expr": { "Literal": { "Value": "true" } } },
+        "text": { "expr": { "Literal": { "Value": "'Categoria'" } } }
+      }}]
+    }
+  }
+}

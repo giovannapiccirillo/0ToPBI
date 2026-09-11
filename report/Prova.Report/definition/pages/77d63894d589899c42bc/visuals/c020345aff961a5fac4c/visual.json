@@ -1,0 +1,43 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "c020345aff961a5fac4c",
+  "position": { "x": 296, "y": 1024, "z": 10000, "height": 24, "width": 1592, "tabOrder": 10000 },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Fonte: staging/vendite.csv e prodotti.csv - refresh manuale (Import) - Periodo dati 2024-2025",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "12px",
+                      "color": "#605E5C"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "background": [{ "properties": { "show": { "expr": { "Literal": { "Value": "false" } } } } }],
+      "border": [{ "properties": { "show": { "expr": { "Literal": { "Value": "false" } } } } }],
+      "padding": [{
+        "properties": {
+          "top": { "expr": { "Literal": { "Value": "0D" } } },
+          "bottom": { "expr": { "Literal": { "Value": "0D" } } },
+          "left": { "expr": { "Literal": { "Value": "0D" } } },
+          "right": { "expr": { "Literal": { "Value": "0D" } } }
+        }
+      }]
+    }
+  }
+}

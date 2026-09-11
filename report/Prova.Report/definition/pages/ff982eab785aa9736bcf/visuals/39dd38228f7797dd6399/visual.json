@@ -1,0 +1,92 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "39dd38228f7797dd6399",
+  "position": { "x": 32, "y": 272, "z": 10000, "height": 728, "width": 1224, "tabOrder": 10000 },
+  "visual": {
+    "visualType": "lineChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [{
+            "field": { "Column": { "Expression": { "SourceRef": { "Entity": "Calendario" } }, "Property": "Mese" } },
+            "queryRef": "Calendario.Mese",
+            "nativeQueryRef": "Mese",
+            "active": true
+          }]
+        },
+        "Series": {
+          "projections": [{
+            "field": { "Column": { "Expression": { "SourceRef": { "Entity": "Calendario" } }, "Property": "Anno" } },
+            "queryRef": "Calendario.Anno",
+            "nativeQueryRef": "Anno"
+          }]
+        },
+        "Y": {
+          "projections": [{
+            "field": { "Measure": { "Expression": { "SourceRef": { "Entity": "Vendite" } }, "Property": "Fatturato Totale" } },
+            "queryRef": "Vendite.Fatturato Totale",
+            "nativeQueryRef": "Fatturato Totale"
+          }]
+        },
+        "Tooltips": {
+          "projections": [
+            {
+              "field": { "Measure": { "Expression": { "SourceRef": { "Entity": "Vendite" } }, "Property": "Var. % Fatturato MoM" } },
+              "queryRef": "Vendite.Var. % Fatturato MoM",
+              "nativeQueryRef": "Var. % Fatturato MoM"
+            },
+            {
+              "field": { "Measure": { "Expression": { "SourceRef": { "Entity": "Vendite" } }, "Property": "Var. % Fatturato YoY" } },
+              "queryRef": "Vendite.Var. % Fatturato YoY",
+              "nativeQueryRef": "Var. % Fatturato YoY"
+            },
+            {
+              "field": { "Measure": { "Expression": { "SourceRef": { "Entity": "Vendite" } }, "Property": "Fatturato YTD" } },
+              "queryRef": "Vendite.Fatturato YTD",
+              "nativeQueryRef": "Fatturato YTD"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [{
+          "field": { "Column": { "Expression": { "SourceRef": { "Entity": "Calendario" } }, "Property": "Mese" } },
+          "direction": "Ascending"
+        }],
+        "isDefaultSort": false
+      }
+    },
+    "objects": {
+      "legend": [{
+        "properties": {
+          "show": { "expr": { "Literal": { "Value": "true" } } },
+          "position": { "expr": { "Literal": { "Value": "'Top'" } } }
+        }
+      }]
+    },
+    "visualContainerObjects": {
+      "title": [{
+        "properties": {
+          "show": { "expr": { "Literal": { "Value": "true" } } },
+          "text": { "expr": { "Literal": { "Value": "'Fatturato mensile: anno corrente vs anno precedente'" } } },
+          "fontSize": { "expr": { "Literal": { "Value": "14D" } } },
+          "fontColor": { "solid": { "color": { "expr": { "Literal": { "Value": "'#252423'" } } } } }
+        }
+      }],
+      "general": [{
+        "properties": {
+          "altText": { "expr": { "Literal": { "Value": "'Grafico a linee del fatturato per mese, una linea per anno: il 2025 in blu a confronto con il 2024 in grigio.'" } } }
+        }
+      }],
+      "padding": [{
+        "properties": {
+          "top": { "expr": { "Literal": { "Value": "8D" } } },
+          "bottom": { "expr": { "Literal": { "Value": "8D" } } },
+          "left": { "expr": { "Literal": { "Value": "8D" } } },
+          "right": { "expr": { "Literal": { "Value": "8D" } } }
+        }
+      }]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

@@ -1,0 +1,7 @@
+relationship VenditeProdotti
+	fromColumn: Vendite.ProductID
+	toColumn: Prodotti.ProductID
+
+relationship VenditeCalendario
+	fromColumn: Vendite.OrderDate
+	toColumn: Calendario.Date

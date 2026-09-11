@@ -1,0 +1,39 @@
+table Prodotti
+
+	column ProductID
+		dataType: string
+		isHidden
+		isKey
+		summarizeBy: none
+		sourceColumn: ProductID
+
+	column ProductName
+		dataType: string
+		summarizeBy: none
+		sourceColumn: ProductName
+
+	column Category
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Category
+
+	column SubCategory
+		dataType: string
+		summarizeBy: none
+		sourceColumn: SubCategory
+
+	column UnitCost
+		dataType: double
+		isHidden
+		summarizeBy: none
+		sourceColumn: UnitCost
+
+	partition Prodotti = m
+		mode: import
+		source =
+				let
+					Source = Csv.Document(File.Contents("C:\Users\mar.colotti\Desktop\Power BI Expert\AcceleratorePBI\staging\Report Vendite Mensile per il Management\prodotti.csv"),[Delimiter=",", Columns=5, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+					PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+					ChangedType = Table.TransformColumnTypes(PromotedHeaders,{{"ProductID", type text}, {"ProductName", type text}, {"Category", type text}, {"SubCategory", type text}, {"UnitCost", type number}})
+				in
+					ChangedType

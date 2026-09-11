@@ -1,0 +1,40 @@
+project: Prova
+source_requirements: output/requirements.md
+approved: true
+
+tables:
+  - name: Vendite
+    source: staging/Report Vendite Mensile per il Management/vendite.csv
+    role: fact
+  - name: Prodotti
+    source: staging/Report Vendite Mensile per il Management/prodotti.csv
+    role: dimension
+  - name: Calendario
+    source: (generata in M — List.Dates 2024-2025, nessun file sorgente)
+    role: dimension
+
+relationships:
+  - from_table: Vendite
+    from_column: ProductID
+    to_table: Prodotti
+    to_column: ProductID
+    cardinality: manyToOne
+    cross_filter: single
+    is_active: true
+    required_by:
+      - "Costo Totale"
+      - "Margine"
+      - "Margine %"
+    notes: ProductID stringa in entrambi i file, stesso formato (P001...)
+  - from_table: Vendite
+    from_column: OrderDate
+    to_table: Calendario
+    to_column: Date
+    cardinality: manyToOne
+    cross_filter: single
+    is_active: true
+    required_by:
+      - "Fatturato YTD"
+      - "Var. % Fatturato MoM"
+      - "Var. % Fatturato YoY"
+    notes: entrambe dateTime; Calendario copre 2024-2025 (periodo dati dei requisiti)

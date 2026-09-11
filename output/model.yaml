@@ -1,0 +1,83 @@
+project: Prova
+culture: it-IT
+
+tables:
+  - name: Vendite
+    role: fact
+    source:
+      type: csv
+      path: staging/Report Vendite Mensile per il Management/vendite.csv
+    columns:
+      - { name: OrderID, dataType: string, hidden: true }
+      - { name: OrderDate, dataType: dateTime, hidden: true }
+      - { name: ProductID, dataType: string, hidden: true }
+      - { name: CustomerName, dataType: string }
+      - { name: Region, dataType: string }
+      - { name: Quantity, dataType: double, hidden: true }
+      - { name: UnitPrice, dataType: double, hidden: true }
+      - { name: Discount, dataType: double, hidden: true }
+    measures:
+      - name: "Fatturato Totale"
+        expression: "SUMX ( Vendite, Vendite[Quantity] * Vendite[UnitPrice] * ( 1 - Vendite[Discount] ) )"
+        formatString: "#,0.00 €"
+      - name: "Quantità Totale Venduta"
+        expression: "SUM ( Vendite[Quantity] )"
+        formatString: "#,0"
+      - name: "Sconto Medio %"
+        expression: "DIVIDE ( SUMX ( Vendite, Vendite[Quantity] * Vendite[UnitPrice] * Vendite[Discount] ), SUMX ( Vendite, Vendite[Quantity] * Vendite[UnitPrice] ) )"
+        formatString: "0.00%"
+      - name: "Costo Totale"
+        expression: "SUMX ( Vendite, Vendite[Quantity] * RELATED ( Prodotti[UnitCost] ) )"
+        formatString: "#,0.00 €"
+      - name: "Margine"
+        expression: "[Fatturato Totale] - [Costo Totale]"
+        formatString: "#,0.00 €"
+      - name: "Margine %"
+        expression: "DIVIDE ( [Margine], [Fatturato Totale] )"
+        formatString: "0.00%"
+      - name: "Fatturato YTD"
+        expression: "TOTALYTD ( [Fatturato Totale], Calendario[Date] )"
+        formatString: "#,0.00 €"
+      - name: "Var. % Fatturato MoM"
+        expression: "DIVIDE ( [Fatturato Totale] - CALCULATE ( [Fatturato Totale], DATEADD ( Calendario[Date], -1, MONTH ) ), CALCULATE ( [Fatturato Totale], DATEADD ( Calendario[Date], -1, MONTH ) ) )"
+        formatString: "0.00%"
+      - name: "Var. % Fatturato YoY"
+        expression: "DIVIDE ( [Fatturato Totale] - CALCULATE ( [Fatturato Totale], SAMEPERIODLASTYEAR ( Calendario[Date] ) ), CALCULATE ( [Fatturato Totale], SAMEPERIODLASTYEAR ( Calendario[Date] ) ) )"
+        formatString: "0.00%"
+      - name: "Numero Ordini"
+        expression: "DISTINCTCOUNT ( Vendite[OrderID] )"
+        formatString: "#,0"
+      - name: "Valore Medio Ordine"
+        expression: "DIVIDE ( [Fatturato Totale], [Numero Ordini] )"
+        formatString: "#,0.00 €"
+
+  - name: Prodotti
+    role: dimension
+    source:
+      type: csv
+      path: staging/Report Vendite Mensile per il Management/prodotti.csv
+    columns:
+      - { name: ProductID, dataType: string, hidden: true, isKey: true }
+      - { name: ProductName, dataType: string }
+      - { name: Category, dataType: string }
+      - { name: SubCategory, dataType: string }
+      - { name: UnitCost, dataType: double, hidden: true }
+
+  - name: Calendario
+    role: dimension
+    dataCategory: Time
+    source:
+      type: calendar
+      start: 2024-01-01
+      end: 2025-12-31
+    columns:
+      - { name: Date, dataType: dateTime, isKey: true }
+      - { name: Anno, dataType: int64 }
+      - { name: "Mese Numero", dataType: int64, hidden: true }
+      - { name: Mese, dataType: string, sortBy: "Mese Numero" }
+      - { name: AnnoMese, dataType: string, sortBy: "Mese Numero" }
+    hierarchies:
+      - name: "Anno - Mese"
+        levels:
+          - { name: Anno, column: Anno }
+          - { name: Mese, column: Mese }
