@@ -1,6 +1,9 @@
 # Valida i file PBIR del report (fase 3) contro il modello semantico e i requisiti approvati.
-# Uso: python scripts/validate_report.py [NomeProgetto]   (default: unico *.Report in report/)
-# Exit 0 = CONFORME; exit 1 = NON CONFORME; exit 2 = file mancanti.
+# Uso: python scripts/validate_report.py <Workdir> [NomeProgetto]
+#   <Workdir>: cartella di progetto in output/ (dove sta requirements.md)
+#   [NomeProgetto]: nome del PBIP in report/<NomeProgetto>.Report/
+#                    (default: unico *.Report in report/)
+# Exit 0 = CONFORME; exit 1 = NON CONFORME; exit 2 = file mancanti/uso errato.
 # Gate obbligatorio: la fase 3 non è conclusa finché questo script non esce con 0.
 #
 # Complementare a `powerbi-report-author validate` (che verifica lo schema JSON):
@@ -17,7 +20,6 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-REQUIREMENTS = ROOT / "output/requirements.md"
 
 # Tipi decorativi: possono legittimamente sovrapporsi ad altri visual (annotazioni,
 # sfondi, loghi) e non richiedono binding né altText obbligatorio.
@@ -141,7 +143,14 @@ def read_json(path, errors, mojibake_files):
 
 
 def main():
-    name = sys.argv[1] if len(sys.argv) > 1 else None
+    args = sys.argv[1:]
+    if not args:
+        print("Uso: python scripts/validate_report.py <Workdir> [NomeProgetto]")
+        return 2
+    workdir = args[0]
+    name = args[1] if len(args) > 1 else None
+    requirements = ROOT / "output" / workdir / "requirements.md"
+
     report_dir = find_dir("Report", name)
     if report_dir is None:
         print("ERRORE: cartella *.Report non trovata (o ambigua: passare il NomeProgetto).")
@@ -151,8 +160,8 @@ def main():
     if model_dir is None:
         print(f"ERRORE: report/{stem}.SemanticModel non trovato — la fase 3 richiede il modello della fase 2.")
         return 2
-    if not REQUIREMENTS.exists():
-        print(f"ERRORE: {REQUIREMENTS} non esiste — la fase 3 richiede requisiti approvati.")
+    if not requirements.exists():
+        print(f"ERRORE: {requirements} non esiste — la fase 3 richiede requisiti approvati.")
         return 2
     definition = report_dir / "definition"
     pages_json = definition / "pages" / "pages.json"
@@ -275,7 +284,7 @@ def main():
 
     # I requisiti impongono la copertura KPI nel MODELLO (gate fase 2) e la copertura
     # PAGINE nel report: un KPI mai mostrato in un visual è un avviso, non un errore.
-    req_text = REQUIREMENTS.read_text(encoding="utf-8", errors="replace")
+    req_text = requirements.read_text(encoding="utf-8", errors="replace")
     missing_kpi = [k for k in required_measures(req_text) if k not in bound_measures]
     if missing_kpi:
         warnings.append("KPI dei requisiti non usati in alcun visual del report: " + "; ".join(missing_kpi))

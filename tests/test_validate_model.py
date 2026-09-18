@@ -36,32 +36,34 @@ class TestValidateModel(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         tmp = Path(self.tmp.name)
-        self._saved = (vm.ROOT, vm.REQUIREMENTS)
+        self._saved_root = vm.ROOT
         vm.ROOT = tmp
-        vm.REQUIREMENTS = tmp / "requirements.md"
-        vm.REQUIREMENTS.write_text(REQ_TEXT, encoding="utf-8")
+        self.workdir = "Test"
+        self.requirements = tmp / "output" / self.workdir / "requirements.md"
+        self.requirements.parent.mkdir(parents=True)
+        self.requirements.write_text(REQ_TEXT, encoding="utf-8")
         self.def_dir = tmp / "report" / "Test.SemanticModel" / "definition"
         (self.def_dir / "tables").mkdir(parents=True)
         (self.def_dir / "model.tmdl").write_text("model Model\n\tculture: it-IT\n", encoding="utf-8")
         (self.def_dir / "tables" / "Vendite.tmdl").write_text(TABLE_TMDL, encoding="utf-8")
 
     def tearDown(self):
-        vm.ROOT, vm.REQUIREMENTS = self._saved
+        vm.ROOT = self._saved_root
         self.tmp.cleanup()
 
     def run_main(self):
-        with mock.patch.object(sys, "argv", ["validate_model.py", "Test"]):
+        with mock.patch.object(sys, "argv", ["validate_model.py", self.workdir, "Test"]):
             return vm.main()
 
     def test_modello_conforme_passa(self):
         self.assertEqual(self.run_main(), 0)
 
     def test_cartella_mancante_exit_2(self):
-        with mock.patch.object(sys, "argv", ["validate_model.py", "Inesistente"]):
+        with mock.patch.object(sys, "argv", ["validate_model.py", self.workdir, "Inesistente"]):
             self.assertEqual(vm.main(), 2)
 
     def test_misura_richiesta_assente_fallisce(self):
-        vm.REQUIREMENTS.write_text(
+        self.requirements.write_text(
             REQ_TEXT + "- Margine — serve nuova misura: fatturato meno costi\n",
             encoding="utf-8",
         )

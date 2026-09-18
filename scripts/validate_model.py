@@ -1,13 +1,15 @@
 # Valida il modello semantico PBIP (fase 2) contro i requisiti approvati.
-# Uso: python scripts/validate_model.py [NomeProgetto]   (default: unico *.SemanticModel in report/)
-# Exit 0 = CONFORME; exit 1 = NON CONFORME; exit 2 = file mancanti.
+# Uso: python scripts/validate_model.py <Workdir> [NomeProgetto]
+#   <Workdir>: cartella di progetto in output/ (dove sta requirements.md)
+#   [NomeProgetto]: nome del PBIP in report/<NomeProgetto>.SemanticModel/
+#                    (default: unico *.SemanticModel in report/)
+# Exit 0 = CONFORME; exit 1 = NON CONFORME; exit 2 = file mancanti/uso errato.
 # Gate obbligatorio: la fase 2 non è conclusa finché questo script non esce con 0.
 import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-REQUIREMENTS = ROOT / "output/requirements.md"
 
 
 def find_model_dir(name=None):
@@ -62,13 +64,20 @@ def required_measures(req_text):
 
 
 def main():
-    name = sys.argv[1] if len(sys.argv) > 1 else None
+    args = sys.argv[1:]
+    if not args:
+        print("Uso: python scripts/validate_model.py <Workdir> [NomeProgetto]")
+        return 2
+    workdir = args[0]
+    name = args[1] if len(args) > 1 else None
+    requirements = ROOT / "output" / workdir / "requirements.md"
+
     model_dir = find_model_dir(name)
     if model_dir is None:
         print("ERRORE: cartella *.SemanticModel non trovata (o ambigua: passare il NomeProgetto).")
         return 2
-    if not REQUIREMENTS.exists():
-        print(f"ERRORE: {REQUIREMENTS} non esiste — la fase 2 richiede requisiti approvati.")
+    if not requirements.exists():
+        print(f"ERRORE: {requirements} non esiste — la fase 2 richiede requisiti approvati.")
         return 2
 
     tmdl = collect_tmdl(model_dir)
@@ -105,7 +114,7 @@ def main():
         errors.append(f"Partition mancanti: {len(set(tables))} tabelle ma solo {partitions} partition.")
 
     # 4. Copertura misure: ogni KPI 'serve nuova misura' dei requisiti deve esistere nel modello
-    req_text = REQUIREMENTS.read_text(encoding="utf-8", errors="replace")
+    req_text = requirements.read_text(encoding="utf-8", errors="replace")
     model_measures = [a or b for a, b in re.findall(
         r"^\s*measure\s+(?:'([^']+)'|([^\s=]+))\s*=", tmdl, re.MULTILINE)]
     # Fallback per TMDL vecchio stile senza keyword 'measure' (nomi nudi prima di '=')
@@ -115,10 +124,10 @@ def main():
     model_measures = [m.strip() for m in model_measures]
     required = required_measures(req_text)
     if not required:
-        errors.append("Sezione 'KPI e Metriche Chiave' di output/requirements.md non nel formato atomico "
-                      "richiesto ('- <Nome> — serve nuova misura ...' / '- <Nome> — misura esistente ...'): "
-                      "impossibile verificare la copertura misure. Correggere prima requirements.md "
-                      "(python scripts/validate_requirements.py).")
+        errors.append(f"Sezione 'KPI e Metriche Chiave' di {requirements.relative_to(ROOT)} non nel formato "
+                      "atomico richiesto ('- <Nome> — serve nuova misura ...' / '- <Nome> — misura esistente "
+                      "...'): impossibile verificare la copertura misure. Correggere prima requirements.md "
+                      f"(python scripts/validate_requirements.py {workdir}).")
     missing = [r for r in required if r not in model_measures]
     if missing:
         errors.append("Misure richieste dai requisiti ASSENTI nel modello (o con nome diverso/corrotto): "

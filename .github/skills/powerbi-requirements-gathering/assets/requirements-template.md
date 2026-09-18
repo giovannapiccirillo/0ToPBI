@@ -12,12 +12,12 @@
 
 ## Dati Disponibili e Granularità
 - Tipo di DB:
-- Modalità di connessione: Import | DirectQuery
-- Tabelle/file attesi in input/:
+- Modalità di connessione: Import | DirectQuery | Fabric Lakehouse
+- Tabelle/file attesi in input/<NomeProgetto>/ (oppure workspace/Lakehouse Fabric):
 - Gap noti:
 
 ## Mapping Requisiti → Schema Target
-<da compilare ogni volta che in input/ ci sono file tabellari (.xlsx/.csv), sia schema esplicito sia estrazione dati (tabelle = file/fogli, colonne = intestazioni); una riga per requisito atomico. "Non applicabile" solo se in input/ non c'è alcun file tabellare>
+<da compilare ogni volta che in input/<NomeProgetto>/ ci sono file tabellari (.xlsx/.csv), sia schema esplicito sia estrazione dati (tabelle = file/fogli, colonne = intestazioni); una riga per requisito atomico. "Non applicabile" solo se in input/<NomeProgetto>/ non c'è alcun file tabellare>
 | Requisito atomico | Tabella.Colonna proposta | Allineato? | Note |
 |---|---|---|---|
 

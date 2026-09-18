@@ -1,15 +1,16 @@
-# Valida output/requirements.md contro il template ufficiale della fase 1.
-# Uso: python scripts/validate_requirements.py
-# Exit 0 = CONFORME; exit 1 = NON CONFORME (errori elencati); exit 2 = file mancanti.
+# Valida output/<Workdir>/requirements.md contro il template ufficiale della fase 1.
+# Uso: python scripts/validate_requirements.py <Workdir>
+# Exit 0 = CONFORME; exit 1 = NON CONFORME (errori elencati); exit 2 = file mancanti/uso errato.
 # Gate obbligatorio: la fase 1 non è conclusa finché questo script non esce con 0.
+#
+# <Workdir> è il nome libero della sottocartella di progetto condivisa da
+# input/<Workdir>/ e output/<Workdir>/.
 import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE = ROOT / ".github/skills/powerbi-requirements-gathering/assets/requirements-template.md"
-OUTPUT = ROOT / "output/requirements.md"
-INPUT_DIR = ROOT / "input"
 
 MAPPING_HEADING = "## Mapping Requisiti → Schema Target"
 
@@ -33,26 +34,34 @@ def section_body(text, heading):
 
 
 def main():
+    if len(sys.argv) != 2:
+        print("Uso: python scripts/validate_requirements.py <Workdir>")
+        return 2
+    workdir = sys.argv[1]
+    output = ROOT / "output" / workdir / "requirements.md"
+    input_dir = ROOT / "input" / workdir
+
     if not TEMPLATE.exists():
         print(f"ERRORE: template non trovato: {TEMPLATE}")
         return 2
-    if not OUTPUT.exists():
-        print(f"NON CONFORME: {OUTPUT} non esiste")
+    if not output.exists():
+        print(f"NON CONFORME: {output} non esiste")
         return 2
 
     template = TEMPLATE.read_text(encoding="utf-8")
-    output = OUTPUT.read_text(encoding="utf-8", errors="replace")
+    output_text = output.read_text(encoding="utf-8", errors="replace")
+    output_path = output
     errors = []
 
     # 1. Encoding integro (niente mojibake da Set-Content/ANSI)
-    if "Ã" in output or "�" in output:
+    if "Ã" in output_text or "�" in output_text:
         errors.append(
             "Encoding corrotto: trovati caratteri mojibake (es. 'GranularitÃ'). "
             "Rigenerare con copia binaria (Copy-Item) e edit UTF-8."
         )
 
     # 2. Intestazioni identiche al template (stesso testo, stesso ordine, nessuna in più o in meno)
-    t_heads, o_heads = headings(template), headings(output)
+    t_heads, o_heads = headings(template), headings(output_text)
     if o_heads != t_heads:
         missing = [h for h in t_heads if h not in o_heads]
         extra = [h for h in o_heads if h not in t_heads]
@@ -67,7 +76,7 @@ def main():
             errors.append("Intestazioni presenti ma in ORDINE diverso dal template.")
 
     # 3. Nessun segnaposto del template sopravvissuto (sezioni non compilate)
-    placeholders = [l for l in output.splitlines() if re.match(r"^\s*<.+>\s*$", l)]
+    placeholders = [l for l in output_text.splitlines() if re.match(r"^\s*<.+>\s*$", l)]
     if placeholders:
         errors.append(
             "Segnaposto del template non compilati: " + "; ".join(p.strip() for p in placeholders)
@@ -75,14 +84,17 @@ def main():
 
     # 4. Campi chiave valorizzati
     for field in ("Nome report:", "Tipo di DB:"):
-        m = re.search(rf"^- {re.escape(field)}(.*)$", output, re.MULTILINE)
+        m = re.search(rf"^- {re.escape(field)}(.*)$", output_text, re.MULTILINE)
         if m is not None and not m.group(1).strip():
             errors.append(f"Campo '{field}' vuoto.")
-    if re.search(r"^- Modalità di connessione: Import \| DirectQuery\s*$", output, re.MULTILINE):
-        errors.append("Campo 'Modalità di connessione:' lasciato al valore segnaposto 'Import | DirectQuery'.")
+    if re.search(r"^- Modalità di connessione: Import \| DirectQuery \| Fabric Lakehouse\s*$", output_text, re.MULTILINE):
+        errors.append(
+            "Campo 'Modalità di connessione:' lasciato al valore segnaposto "
+            "'Import | DirectQuery | Fabric Lakehouse'."
+        )
 
     # 4-bis. Formato atomico dei KPI: una riga per KPI, con marcatura esistente/nuova misura
-    kpi_body = section_body(output, "## KPI e Metriche Chiave")
+    kpi_body = section_body(output_text, "## KPI e Metriche Chiave")
     if kpi_body is not None and not re.search(
         r"^\s*- .+? — (?:serve nuova misura|misura esistente)", kpi_body, re.MULTILINE
     ):
@@ -92,17 +104,17 @@ def main():
             "'- <Nome KPI> — misura esistente: <nome>' (niente elenchi schiacciati su una riga sola)."
         )
 
-    # 5. Mapping obbligatorio se in input/ ci sono file tabellari
+    # 5. Mapping obbligatorio se in input/<Workdir>/ ci sono file tabellari
     tabular = []
-    if INPUT_DIR.exists():
+    if input_dir.exists():
         tabular = sorted(
-            p.name for p in INPUT_DIR.iterdir() if p.suffix.lower() in (".csv", ".xlsx")
+            p.name for p in input_dir.iterdir() if p.suffix.lower() in (".csv", ".xlsx")
         )
-    body = section_body(output, MAPPING_HEADING)
+    body = section_body(output_text, MAPPING_HEADING)
     if body is not None and tabular:
         if re.search(r"non applicabile", body, re.IGNORECASE):
             errors.append(
-                f"Sezione Mapping dichiarata 'Non applicabile' ma in input/ ci sono file tabellari "
+                f"Sezione Mapping dichiarata 'Non applicabile' ma in input/{workdir}/ ci sono file tabellari "
                 f"({', '.join(tabular)}): lo schema si ricava dalle intestazioni, il mapping va compilato."
             )
         data_rows = [
@@ -112,12 +124,12 @@ def main():
         ]
         if not data_rows:
             errors.append(
-                f"Sezione Mapping senza righe di requisiti atomici, ma in input/ ci sono file tabellari "
+                f"Sezione Mapping senza righe di requisiti atomici, ma in input/{workdir}/ ci sono file tabellari "
                 f"({', '.join(tabular)}): serve una riga per requisito con Tabella.Colonna reale e verifica di allineamento."
             )
 
     if errors:
-        print("NON CONFORME — output/requirements.md non rispetta il template:")
+        print(f"NON CONFORME — {output_path.relative_to(ROOT)} non rispetta il template:")
         for e in errors:
             print(f"  - {e}")
         print("\nAzione richiesta: cancellare il file, ricopiare il template "
@@ -125,7 +137,7 @@ def main():
               "con copia binaria e compilare solo il testo sotto le intestazioni.")
         return 1
 
-    print("CONFORME: output/requirements.md rispetta il template"
+    print(f"CONFORME: {output_path.relative_to(ROOT)} rispetta il template"
           + (f" (mapping verificato su: {', '.join(tabular)})" if tabular else ""))
     return 0
 

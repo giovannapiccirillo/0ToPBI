@@ -1,15 +1,18 @@
-# Convertitore generico dei file binari in input/ — nessuno script ad hoc per report.
+# Convertitore generico dei file binari in input/<Workdir>/ — nessuno script ad hoc per report.
 # Uso:
-#   python scripts/convert_input.py                # converte tutti i .docx/.xlsx in input/
-#   python scripts/convert_input.py input/doc.docx # converte solo i file indicati
-#   python scripts/convert_input.py --force        # riconverte anche se il convertito è aggiornato
+#   python scripts/convert_input.py <Workdir>                # converte tutti i .docx/.xlsx in input/<Workdir>/
+#   python scripts/convert_input.py <Workdir> doc.docx        # converte solo i file indicati (nomi relativi a input/<Workdir>/)
+#   python scripts/convert_input.py <Workdir> --force         # riconverte anche se il convertito è aggiornato
+#
+# <Workdir> è il nome libero della sottocartella di progetto in input/ (es. "demo"),
+# scelto dall'utente indipendentemente dal nome del progetto PBIP.
 #
 # Regole (dalla skill powerbi-requirements-gathering):
 # - il convertito va accanto all'originale: <nome>.md per i .docx, <nome>.csv per gli .xlsx
 #   (un CSV per foglio, <nome>__<foglio>.csv, se il workbook ha più fogli)
 # - se il convertito esiste ed è più recente dell'originale, si riusa (skip) salvo --force
 # - l'originale non viene mai modificato; output sempre UTF-8
-# Exit 0 = ok (anche se tutto era già convertito); exit 1 = almeno una conversione fallita.
+# Exit 0 = ok (anche se tutto era già convertito); exit 1 = almeno una conversione fallita; exit 2 = uso errato.
 import re
 import sys
 import zipfile
@@ -17,7 +20,6 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-INPUT_DIR = ROOT / "input"
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 
 
@@ -95,14 +97,21 @@ def convert_one(src: Path, force: bool):
 
 
 def main():
-    args = [a for a in sys.argv[1:] if a != "--force"]
-    force = "--force" in sys.argv[1:]
-    targets = [Path(a) for a in args] if args else sorted(
-        p for p in INPUT_DIR.iterdir() if p.suffix.lower() in (".docx", ".xlsx", ".xls")
-    ) if INPUT_DIR.exists() else []
+    argv = sys.argv[1:]
+    force = "--force" in argv
+    positional = [a for a in argv if a != "--force"]
+    if not positional:
+        print("Uso: python scripts/convert_input.py <Workdir> [file...] [--force]")
+        return 2
+    workdir, *names = positional
+    input_dir = ROOT / "input" / workdir
+
+    targets = [input_dir / n for n in names] if names else sorted(
+        p for p in input_dir.iterdir() if p.suffix.lower() in (".docx", ".xlsx", ".xls")
+    ) if input_dir.exists() else []
 
     if not targets:
-        print("Nessun file .docx/.xlsx da convertire in input/.")
+        print(f"Nessun file .docx/.xlsx da convertire in input/{workdir}/.")
         return 0
 
     failed = False

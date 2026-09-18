@@ -3,6 +3,11 @@
     "powerbi-modeling-mcp": {
       "command": "npx",
       "args": ["-y", "@microsoft/powerbi-modeling-mcp", "--start"]
+    },
+    "fabric-sqlendpoint": {
+      "type": "http",
+      "url": "https://api.fabric.microsoft.com/v1/mcp/dataPlane/sqlEndpoint",
+      "tools": ["execute_query"]
     }
   }
 }

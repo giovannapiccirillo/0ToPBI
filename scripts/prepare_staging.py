@@ -163,12 +163,14 @@ def prepare_staging(
     column_config: dict,
     out_filename: str | None = None,
     sheet_name: str | None = None,
-    staging_root: str = "staging",
+    staging_root: str | None = None,
     requirement_refs: dict | None = None,
     anomalies: list[str] | None = None,
 ) -> dict:
+    """staging_root: default 'output/<project_name>/staging' (nome cartella
+    condivisa con input/<project_name>/ e output/<project_name>/)."""
     p = Path(source_path)
-    out_dir = Path(staging_root) / project_name
+    out_dir = Path(staging_root) if staging_root else Path("output") / project_name / "staging"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     df = read_source(source_path, sheet_name=sheet_name)
@@ -206,15 +208,16 @@ def prepare_staging(
 USAGE = """\
 Uso: python scripts/prepare_staging.py --config <file.json>
 
-Il file JSON descrive il progetto e i file da processare (la config la
-costruisce l'agente `etl` a partire da output/requirements.md - questo
-messaggio NON e' un errore ne' un motivo per saltare la fase 1.5):
+Il file JSON descrive il progetto (= nome cartella condivisa da input/<project>/
+e output/<project>/) e i file da processare (la config la costruisce l'agente
+`etl-resolver` a partire da output/<project>/requirements.md - questo messaggio
+NON e' un errore ne' un motivo per saltare la fase 1.5):
 
 {
-  "project": "<NomeProgetto>",
+  "project": "<Workdir>",
   "jobs": [
     {
-      "source": "input/<file>.csv|.xlsx",
+      "source": "input/<Workdir>/<file>.csv|.xlsx",
       "column_config": {"<colonna>": "date|decimal|text",
                          "<colonna>": {"type": "categorical", "mapping": {...}}},
       "requirement_refs": {"<colonna>": "<requisito atomico dal Mapping>"},
@@ -226,7 +229,7 @@ messaggio NON e' un errore ne' un motivo per saltare la fase 1.5):
 }
 
 Un file gia' conforme va comunque incluso come job (con "column_config": {}):
-produce il CSV UTF-8 in staging/ e la voce "Nessuna" in etl-log.md.
+produce il CSV UTF-8 in output/<Workdir>/staging/ e la voce "Nessuna" in etl-log.md.
 In alternativa, importa prepare_staging() da Python e passa gli stessi parametri.
 """
 
@@ -244,7 +247,7 @@ def run_config(config_path: str) -> list[dict]:
                 column_config=job.get("column_config", {}),
                 out_filename=job.get("out_filename"),
                 sheet_name=job.get("sheet_name"),
-                staging_root=cfg.get("staging_root", "staging"),
+                staging_root=cfg.get("staging_root"),
                 requirement_refs=job.get("requirement_refs"),
                 anomalies=job.get("anomalies"),
             )

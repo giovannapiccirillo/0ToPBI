@@ -59,10 +59,12 @@ class TestValidateReport(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         tmp = Path(self.tmp.name)
-        self._saved = (vp.ROOT, vp.REQUIREMENTS)
+        self._saved_root = vp.ROOT
         vp.ROOT = tmp
-        vp.REQUIREMENTS = tmp / "requirements.md"
-        vp.REQUIREMENTS.write_text(REQ_TEXT, encoding="utf-8")
+        self.workdir = "Test"
+        self.requirements = tmp / "output" / self.workdir / "requirements.md"
+        self.requirements.parent.mkdir(parents=True)
+        self.requirements.write_text(REQ_TEXT, encoding="utf-8")
 
         model_def = tmp / "report" / "Test.SemanticModel" / "definition"
         (model_def / "tables").mkdir(parents=True)
@@ -77,7 +79,7 @@ class TestValidateReport(unittest.TestCase):
         self.add_visual("page1", make_visual("v1", 0, 0, 300, 200))
 
     def tearDown(self):
-        vp.ROOT, vp.REQUIREMENTS = self._saved
+        vp.ROOT = self._saved_root
         self.tmp.cleanup()
 
     def write_pages_meta(self, page_order):
@@ -99,7 +101,7 @@ class TestValidateReport(unittest.TestCase):
         (d / "visual.json").write_text(json.dumps(visual), encoding="utf-8")
 
     def run_main(self):
-        with mock.patch.object(sys, "argv", ["validate_report.py", "Test"]):
+        with mock.patch.object(sys, "argv", ["validate_report.py", self.workdir, "Test"]):
             return vp.main()
 
     def test_report_conforme_passa(self):
@@ -132,13 +134,13 @@ class TestValidateReport(unittest.TestCase):
         self.assertEqual(self.run_main(), 1)
 
     def test_pagina_richiesta_dai_requisiti_assente_fallisce(self):
-        vp.REQUIREMENTS.write_text(
+        self.requirements.write_text(
             REQ_TEXT + "2. Analisi di Dettaglio — scopo: approfondimento\n", encoding="utf-8"
         )
         self.assertEqual(self.run_main(), 1)
 
     def test_report_mancante_exit_2(self):
-        with mock.patch.object(sys, "argv", ["validate_report.py", "Inesistente"]):
+        with mock.patch.object(sys, "argv", ["validate_report.py", self.workdir, "Inesistente"]):
             self.assertEqual(vp.main(), 2)
 
 

@@ -1,9 +1,9 @@
 # Genera la definizione TMDL del modello semantico da una spec dichiarativa.
-# Gli agenti NON scrivono mai TMDL a mano: compilano output/model.yaml e lanciano questo script.
+# Gli agenti NON scrivono mai TMDL a mano: compilano output/<Workdir>/model.yaml e lanciano questo script.
 #
-# Uso: python scripts/build_model.py [output/model.yaml]
-#   - legge la spec (default: output/model.yaml)
-#   - legge le relazioni approvate da output/relationships.yaml (se esiste; altrimenti spec.relationships)
+# Uso: python scripts/build_model.py <Workdir> [path/spec.yaml]
+#   - legge la spec (default: output/<Workdir>/model.yaml)
+#   - legge le relazioni approvate da output/<Workdir>/relationships.yaml (se esiste; altrimenti spec.relationships)
 #   - scrive report/<project>.SemanticModel/definition/ : database.tmdl, model.tmdl,
 #     tables/*.tmdl, relationships.tmdl (+ cultures/<culture>.tmdl se mancante)
 #   - esegue automaticamente scripts/validate_model.py come verifica finale
@@ -18,7 +18,7 @@
 #       dataCategory: Time            # opzionale (tipico per il calendario)
 #       source:
 #         type: csv                   # csv | calendar
-#         path: staging/<Progetto>/vendite.csv     # per csv (relativo alla root del repo)
+#         path: output/<Workdir>/staging/vendite.csv  # per csv (relativo alla root del repo)
 #         start: 2024-01-01           # per calendar
 #         end: 2025-12-31             # per calendar
 #       columns:                      # per calendar usare le 5 colonne standard:
@@ -37,7 +37,7 @@
 #           levels:
 #             - { name: Anno, column: Anno }
 #             - { name: Mese, column: Mese }
-#   relationships:                    # usato SOLO se output/relationships.yaml non esiste
+#   relationships:                    # usato SOLO se output/<Workdir>/relationships.yaml non esiste
 #     - { from_table: Vendite, from_column: ProductID, to_table: Prodotti, to_column: ProductID }
 import sys
 from pathlib import Path
@@ -45,8 +45,6 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_SPEC = ROOT / "output/model.yaml"
-RELATIONSHIPS_YAML = ROOT / "output/relationships.yaml"
 
 M_TYPES = {
     "string": "type text",
@@ -157,9 +155,9 @@ def render_table(table: dict) -> str:
     return "\n".join(out)
 
 
-def load_relationships(spec: dict) -> list[dict]:
-    if RELATIONSHIPS_YAML.exists():
-        data = yaml.safe_load(RELATIONSHIPS_YAML.read_text(encoding="utf-8"))
+def load_relationships(spec: dict, relationships_yaml: Path) -> list[dict]:
+    if relationships_yaml.exists():
+        data = yaml.safe_load(relationships_yaml.read_text(encoding="utf-8"))
         return data.get("relationships", [])
     return spec.get("relationships", [])
 
@@ -182,7 +180,13 @@ def render_relationships(rels: list[dict]) -> str:
 
 
 def main():
-    spec_path = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_SPEC
+    args = sys.argv[1:]
+    if not args:
+        print("Uso: python scripts/build_model.py <Workdir> [path/spec.yaml]")
+        return 2
+    workdir = args[0]
+    spec_path = Path(args[1]) if len(args) > 1 else ROOT / "output" / workdir / "model.yaml"
+    relationships_yaml = ROOT / "output" / workdir / "relationships.yaml"
     if not spec_path.exists():
         print(f"ERRORE: spec non trovata: {spec_path}")
         return 2
@@ -234,20 +238,20 @@ def main():
         )
 
     # relationships.tmdl
-    rels = load_relationships(spec)
+    rels = load_relationships(spec, relationships_yaml)
     rel_file = definition / "relationships.tmdl"
     if rels:
         rel_file.write_text(render_relationships(rels), encoding="utf-8")
     elif rel_file.exists():
         rel_file.unlink()
 
-    src = "output/relationships.yaml" if RELATIONSHIPS_YAML.exists() else "spec"
+    src = str(relationships_yaml.relative_to(ROOT)) if relationships_yaml.exists() else "spec"
     print(f"Generato {definition} — {len(table_names)} tabelle, {len(rels)} relazioni (da {src}).")
 
     # Verifica finale con il gate di fase 2
     import subprocess
     result = subprocess.run(
-        [sys.executable, str(ROOT / "scripts" / "validate_model.py"), project],
+        [sys.executable, str(ROOT / "scripts" / "validate_model.py"), workdir, project],
         cwd=ROOT,
     )
     return result.returncode

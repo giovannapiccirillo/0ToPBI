@@ -72,8 +72,8 @@ class TestPrepareStaging(unittest.TestCase):
             {"Amount": "decimal"},
             requirement_refs={"Amount": "Fatturato Totale"},
         )
-        out_csv = self.staging_root / "Test" / "vendite.csv"
-        log = self.staging_root / "Test" / "etl-log.md"
+        out_csv = self.staging_root / "vendite.csv"
+        log = self.staging_root / "etl-log.md"
         self.assertTrue(out_csv.exists())
         self.assertTrue(log.exists(), "etl-log.md è output obbligatorio quanto il CSV")
         log_text = log.read_text(encoding="utf-8")
@@ -85,18 +85,18 @@ class TestPrepareStaging(unittest.TestCase):
 
     def test_file_gia_conforme_logga_nessuna_trasformazione(self):
         self.run_job({})
-        log_text = (self.staging_root / "Test" / "etl-log.md").read_text(encoding="utf-8")
+        log_text = (self.staging_root / "etl-log.md").read_text(encoding="utf-8")
         self.assertIn("Nessuna: dati già conformi", log_text)
 
     def test_riesecuzione_sostituisce_la_sezione_senza_duplicarla(self):
         self.run_job({"Amount": "decimal"})
         self.run_job({"Amount": "decimal"})
-        log_text = (self.staging_root / "Test" / "etl-log.md").read_text(encoding="utf-8")
+        log_text = (self.staging_root / "etl-log.md").read_text(encoding="utf-8")
         self.assertEqual(log_text.count("## vendite.csv"), 1)
 
     def test_anomalie_riportate_nel_log(self):
         self.run_job({}, anomalies=["3 righe con OrderID duplicato: conferma richiesta"])
-        log_text = (self.staging_root / "Test" / "etl-log.md").read_text(encoding="utf-8")
+        log_text = (self.staging_root / "etl-log.md").read_text(encoding="utf-8")
         self.assertIn("OrderID duplicato", log_text)
 
     def test_run_config_da_json(self):
@@ -111,6 +111,22 @@ class TestPrepareStaging(unittest.TestCase):
         results = ps.run_config(str(cfg))
         self.assertEqual(len(results), 1)
         self.assertTrue(Path(results[0]["path"]).exists())
+
+    def test_staging_root_default_e_output_workdir_staging(self):
+        import os
+
+        cwd = os.getcwd()
+        os.chdir(self.dir)
+        try:
+            result = ps.prepare_staging(
+                source_path=str(self.source),
+                project_name="Test",
+                column_config={},
+            )
+        finally:
+            os.chdir(cwd)
+        self.assertEqual(Path(result["path"]), Path("output") / "Test" / "staging" / "vendite.csv")
+        self.assertTrue((self.dir / "output" / "Test" / "staging" / "vendite.csv").exists())
 
 
 if __name__ == "__main__":

@@ -57,8 +57,9 @@ a memoria.
 ## Core Workflows
 
 Passaggio A — Design: scegli l'archetipo più adatto ai requisiti approvati in
-`output/requirements.md` e produci un blocco YAML strutturato con pagine, KPI,
-visual, slicer e tema, seguendo il formato di `powerbi-report-design`.
+`output/<NomeProgetto>/requirements.md` e produci un blocco YAML strutturato
+con pagine, KPI, visual, slicer e tema, seguendo il formato di
+`powerbi-report-design`.
 Passaggio A.1 — Confronto con l'utente (OBBLIGATORIO): il design brief è una
 **proposta**, non una decisione. Presenta all'utente la proposta in forma
 sintetica e leggibile (per ogni pagina: archetipo, disposizione, visual, filtri,
@@ -67,21 +68,22 @@ le sue idee e modifiche. Itera sulla proposta finché l'utente non approva
 esplicitamente il brief. Non scrivere alcun file PBIR prima di questa
 approvazione: il layout si costruisce insieme all'utente, mai a sorpresa.
 Passaggio B — Authoring: traduci il design brief in file PBIR reali dentro
-`report/<NomeProgetto>.Report/` (il progetto `.pbip`, `.Report/` e
+`report/<Progetto>.Report/` (il progetto `.pbip`, `.Report/` e
 `.SemanticModel/` vivono nella cartella `report/` alla radice del repository,
 non nella root), creando cartelle e JSON per ogni pagina e scrivendo il
 `visual.json` con binding esatti ai campi del modello semantico validato nella
 fase 2 — usa i metadati della CLI per i nomi esatti, non indovinare lo schema.
 Dopo ogni batch di modifiche esegui `powerbi-report-author validate
-report/<NomeProgetto>.Report/` e correggi ogni errore (schema invalido,
+report/<Progetto>.Report/` e correggi ogni errore (schema invalido,
 reference rotti, proprietà mancanti) prima di proseguire. A fine authoring
 esegui anche il gate deterministico `python scripts/validate_report.py
-<NomeProgetto>`: verifica la coerenza report ↔ modello ↔ requisiti (binding a
-tabelle/colonne/misure esistenti, pagine dei requisiti presenti, visual nel
-canvas e non sovrapposti, encoding) e la fase 3 può chiudersi **solo con exit
-code 0** — gli errori elencati vanno corretti nei PBIR e lo script rieseguito.
-Al termine, chiedi all'utente di passare alla fase 4 (build/verifica con
-reload, screenshot, review) solo dopo approvazione esplicita.
+<NomeProgetto> <Progetto>`: verifica la coerenza report ↔ modello ↔ requisiti
+(binding a tabelle/colonne/misure esistenti, pagine dei requisiti presenti,
+visual nel canvas e non sovrapposti, encoding) e la fase 3 può chiudersi
+**solo con exit code 0** — gli errori elencati vanno corretti nei PBIR e lo
+script rieseguito. Al termine, chiedi all'utente di passare alla fase 4
+(build/verifica con reload, screenshot, review) solo dopo approvazione
+esplicita.
 
 ## Must
 
@@ -93,8 +95,8 @@ reload, screenshot, review) solo dopo approvazione esplicita.
 - Non indovinare lo schema PBIR: usare i metadati CLI per nomi esatti
 - Validare ogni batch di modifiche con `powerbi-report-author validate`
 - Prima di chiedere l'approvazione di fase 3, eseguire `python
-  scripts/validate_report.py <NomeProgetto>`: approvazione richiedibile **solo
-  con exit code 0**
+  scripts/validate_report.py <NomeProgetto> <Progetto>`: approvazione
+  richiedibile **solo con exit code 0**
 - Chiedere approvazione esplicita prima di passare alla fase 4
 
 ## Prefer
