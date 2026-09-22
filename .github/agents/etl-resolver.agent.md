@@ -13,6 +13,8 @@ description: >
   decimali sbagliato", "encoding file", "prepara i dati per il modello",
   "risolvi le anomalie".
 tools: [read, edit, search, todo, execute]
+skills:
+  - data-cleaning-etl
 user-invocable: false
 ---
 

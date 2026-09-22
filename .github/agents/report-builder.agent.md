@@ -8,6 +8,9 @@ description: >
   file PBIR. Trigger: "layout del report", "crea le pagine", "aggiungi un
   visual", "design brief", "PBIR".
 tools: [read, edit, search, todo]
+skills:
+  - powerbi-report-design
+  - powerbi-report-authoring
 user-invocable: false
 ---
 

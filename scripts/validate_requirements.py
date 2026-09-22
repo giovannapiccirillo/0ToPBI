@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-TEMPLATE = ROOT / ".github/skills/powerbi-requirements-gathering/assets/requirements-template.md"
+TEMPLATE = ROOT / ".github/skills/powerbi-requirements-gathering/templates/requirements-template.md"
 
 MAPPING_HEADING = "## Mapping Requisiti → Schema Target"
 
@@ -76,7 +76,10 @@ def main():
             errors.append("Intestazioni presenti ma in ORDINE diverso dal template.")
 
     # 3. Nessun segnaposto del template sopravvissuto (sezioni non compilate)
-    placeholders = [l for l in output_text.splitlines() if re.match(r"^\s*<.+>\s*$", l)]
+    placeholders = [
+        l for l in output_text.splitlines()
+        if re.match(r"^\s*(?:<.+>|\{.+\})\s*$", l)
+    ]
     if placeholders:
         errors.append(
             "Segnaposto del template non compilati: " + "; ".join(p.strip() for p in placeholders)
@@ -133,7 +136,7 @@ def main():
         for e in errors:
             print(f"  - {e}")
         print("\nAzione richiesta: cancellare il file, ricopiare il template "
-              "(.github/skills/powerbi-requirements-gathering/assets/requirements-template.md) "
+              "(.github/skills/powerbi-requirements-gathering/templates/requirements-template.md) "
               "con copia binaria e compilare solo il testo sotto le intestazioni.")
         return 1
 

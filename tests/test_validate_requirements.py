@@ -17,7 +17,9 @@ def conforming_text():
     lines = []
     for line in vr.TEMPLATE.read_text(encoding="utf-8").splitlines():
         stripped = line.strip()
-        if stripped.startswith("<") and stripped.endswith(">"):
+        if (stripped.startswith("<") and stripped.endswith(">")) or (
+            stripped.startswith("{") and stripped.endswith("}")
+        ):
             lines.append("testo compilato")
             continue
         if line == "- Nome report:":

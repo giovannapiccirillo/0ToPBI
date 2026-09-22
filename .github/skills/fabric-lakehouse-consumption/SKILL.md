@@ -33,11 +33,15 @@ segnalalo all'utente invece di improvvisare con altri strumenti.
 |---|---|
 | MCP `fabric-sqlendpoint` (`execute_query`) | **Primario**: esegue T-SQL contro l'endpoint SQL Fabric. Configurato in `.mcp.json` di questo repo. Autenticazione trasparente via `az login` (nessun token/secret da gestire a mano). |
 | `az rest` | Solo per risolvere `workspaceId`/`itemId` da nome (discovery control-plane), non per eseguire query dati |
+| `scripts/ensure_fabric_login.py` | Verifica/stabilisce la sessione `az login` (vedi sezione "Autenticazione" sotto) prima di usare gli altri due |
 
 > **Se il tool MCP `execute_query` non è disponibile** nella tua sessione:
 > fermati e segnala all'utente di verificare che l'MCP `fabric-sqlendpoint`
-> sia configurato e che sia stato eseguito `az login`. Non ripiegare su
-> `sqlcmd` o altri strumenti ad hoc.
+> sia configurato in `.mcp.json`. Se invece il problema è di autenticazione
+> (query che falliscono con errore 401/403), esegui prima
+> `scripts/ensure_fabric_login.py` invece di segnalare subito: potrebbe
+> bastare un nuovo login. Non ripiegare comunque su `sqlcmd` o altri
+> strumenti ad hoc.
 
 ### Firma del tool
 
@@ -56,6 +60,22 @@ execute_query(workspaceId, itemId, query)
 live): max ~10.000 righe per risposta, timeout 300s, 20 richieste/min per
 identità. Usa sempre `TOP`/`WHERE`/`COUNT(*)` prima di un `SELECT` non
 filtrato — vedi [references/consumption-core.md](references/consumption-core.md).
+
+## Autenticazione — Verifica Sessione az
+
+Prima di qualunque chiamata `az rest` o `execute_query`, esegui via `execute`:
+
+```text
+python scripts/ensure_fabric_login.py
+```
+
+Controlla se esiste già una sessione `az login` valida (`az account show`).
+Se manca o è scaduta, **lancia automaticamente `az login`**, che apre il
+browser per l'autenticazione Microsoft interattiva (popup di login) — non
+serve chiedere all'utente di lanciarlo a mano da terminale. Procedi con la
+risoluzione workspace/item solo con exit code 0. Se lo script esce con
+codice diverso da 0 (login fallito o annullato), fermati e segnalalo
+all'utente invece di ripetere il login in loop.
 
 ## Risoluzione workspace/item
 

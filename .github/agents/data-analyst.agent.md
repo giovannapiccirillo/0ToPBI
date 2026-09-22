@@ -11,6 +11,9 @@ description: >
   i dati. Trigger: "analizza i dati", "che qualità hanno i dati", "quante
   righe ha la tabella", "esplora il Lakehouse", "schema dei dati".
 tools: [read, edit, search, todo, execute]
+skills:
+  - data-analysis
+  - fabric-lakehouse-consumption
 user-invocable: false
 ---
 

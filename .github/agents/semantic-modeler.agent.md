@@ -14,6 +14,8 @@ description: >
   semantico. Trigger: "crea il modello", "aggiungi una misura", "modello
   semantico", "relazioni tra tabelle", "DAX".
 tools: [read, edit, search, todo]
+skills:
+  - semantic-model-authoring
 user-invocable: false
 ---
 

@@ -6,9 +6,7 @@ description: >-
   di architettura delle pagine e direzione di design. Produce un unico file
   `output/<NomeProgetto>/requirements.md` usato come input approvato per la fase 2
   (modellazione semantica) e la fase 3 (layout/authoring del report). Non
-  esegue modifiche al modello, contratti di design o authoring PBIR — questi
-  compiti appartengono rispettivamente a `semantic-model-authoring`,
-  `powerbi-report-design` e `powerbi-report-authoring`.
+  esegue modifiche al modello, contratti di design o authoring PBIR 
   Triggers: "nuovo report", "raccolta requisiti", "cosa vuoi vedere nel
   report", "intervista requisiti".
 ---
@@ -26,12 +24,19 @@ Questa skill definisce l'intervista strutturata per la **sola fase 1** di un nuo
 
 - Fare una domanda alla volta; fermarsi quando la decisione richiesta è chiara.
 - Produrre esattamente un file di output: `output/<NomeProgetto>/requirements.md`.
-- **Ricreare `output/<NomeProgetto>/requirements.md` da zero a ogni raccolta requisiti**: se una versione precedente del file esiste (altro report, bozza interrotta, o versione anteriore dello stesso report), cancellarla prima di copiare il template — mai aggiornare o integrare il file esistente.
+- **Ricreare `output/<NomeProgetto>/requirements.md` da zero a ogni raccolta requisiti**: se una versione precedente del file esiste (altro report, bozza interrotta, o versione anteriore dello stesso report), cancellarla prima di copiare il template — mai aggiornare o integrare il file esistente **di una raccolta precedente**.
+- **Compilare il file progressivamente durante l'intervista, non solo alla fine**: copiare il template al Round 0 (non a fine sessione) e scrivere ogni sezione non appena il round corrispondente viene confermato dall'utente — vedi [Output](#output). Le risposte non restano solo in conversazione: il file sul disco è lo stato di avanzamento reale.
 - Ottenere l'approvazione esplicita dell'utente su `output/<NomeProgetto>/requirements.md` prima di passare alla fase 2.
 - Fermarsi a una bozza di elenco pagine e una bozza di direzione di design in prosa — non produrre un blocco YAML `Design Brief:` né alcun `layout_contract`. Quello è compito di `report-builder` nella fase 3, in consultazione con `powerbi-report-design`.
-- Se manca un'informazione fondamentale per il mapping o l'import (db reale, modalità di connessione, ecc. — vedi [Mapping Requisiti → Schema Target](#mapping-requisiti--schema-target-quando-in-inputnomeprogetto-ci-sono-file-tabellari)), fermarsi e fare domande puntuali sul gap specifico, mai proseguire con ipotesi implicite.
+- Se manca un'informazione fondamentale per l'import (db reale, modalità di connessione, ecc. — vedi [Mapping Requisiti → Schema Target](#mapping-requisiti--schema-target)), fermarsi e fare domande puntuali sul gap specifico, mai proseguire con ipotesi implicite.
+- **Non ispezionare mai lo schema reale** (intestazioni di file `.xlsx`/`.csv` in `input/<NomeProgetto>/`, o un Lakehouse Fabric) per dedurre un match `Tabella.Colonna`: leggere lo schema è compito esclusivo di `data-analyst` in fase 1.5. Un match va riportato solo se è dichiarato esplicitamente nei requisiti stessi (documento o utente).
 - Il file di output deve contenere sempre le informazioni minime necessarie alla fase 2: obiettivo, audience, sorgente/schema, tabelle/colonne/chiavi, granularità, KPI e gap. Non si può considerare completata la raccolta con una descrizione generica di business.
 - Ignorare come fonte una eventuale "soluzione iniziale" già presente nell'input: non va letta né usata per il mapping.
+- **Nessuna sezione resta con un valore implicito quando il round è chiuso**:
+  - Campi che vanno **sempre chiesti/dedotti** (Audience e Scopo, Dati Disponibili, KPI): se l'utente non risponde o non lo sa, scrivi `Non specificato` — non saltare la domanda solo perché prevedi questa via d'uscita, provaci prima.
+  - Sezioni **genuinamente condizionali** (Mapping Requisiti, Domande Aperte, Gap noti, Vincoli/Rischi/Note): se al termine del round non emerge nulla di rilevante, scrivi `Non applicabile` seguito dal motivo in breve (es. `Non applicabile: nessuna fonte-schema disponibile`).
+
+  Le regole meccaniche su come si scrive materialmente ogni sezione (placeholder vuoti, intestazioni intoccabili, una sola riscrittura per sezione) sono responsabilità dell'agente — vedi "Come Scrivo il File" in `requirements-analyst.agent.md`.
 
 ### PREFERIRE
 
@@ -48,9 +53,9 @@ Questa skill definisce l'intervista strutturata per la **sola fase 1** di un nuo
 
 ## Lettura di File Binari in input/<NomeProgetto>/ (docx, xlsx)
 
-Il tool `read` legge solo testo semplice (`.md`, `.txt`, `.csv`, ...): non riesce ad aprire direttamente i file binari Office come `.docx` o `.xlsx`, anche se si trovano nel posto giusto (`input/<NomeProgetto>/`). Prima di leggere un file con una di queste estensioni, convertilo con `execute` e leggi il file convertito — mai tentare `read` direttamente sul binario, e mai chiedere all'utente di convertirlo lui: è un passaggio automatico dell'agente.
+Il tool `read` legge solo testo semplice (`.md`, `.txt`, `.csv`, ...): non riesce ad aprire direttamente i file binari Office come `.docx` o `.xlsx`, anche se si trovano nel posto giusto (`input/<NomeProgetto>/`). Prima di leggere un file con una di queste estensioni serve il convertito — mai tentare `read` direttamente sul binario, e mai chiedere all'utente di convertirlo lui. Chi esegue materialmente la conversione (l'agente stesso o l'orchestrator, a seconda dei tool disponibili in fase) è definito in `requirements-analyst.agent.md`; questa sezione descrive solo lo script e le sue regole.
 
-**Non è un passaggio da presentare all'utente**: è un dettaglio implementativo interno, silenzioso. Non annunciarlo come uno step a sé stante (niente "Ora converto il file...", nessuna approvazione o riepilogo intermedio su di esso). Esegui la conversione, poi passa direttamente al contenuto — la prima cosa visibile all'utente deve essere la sintesi dei requisiti letti dal documento, non la conversione stessa.
+**Non è un passaggio da presentare all'utente**: è un dettaglio implementativo interno, silenzioso. Non annunciarlo come uno step a sé stante (niente "Ora converto il file...", nessuna approvazione o riepilogo intermedio su di esso). La prima cosa visibile all'utente deve essere la sintesi dei requisiti letti dal documento, non la conversione stessa.
 
 **La conversione si fa con lo script generico del progetto, mai con codice ad hoc scritto al momento:**
 
@@ -74,91 +79,64 @@ Esegui i round seguenti in ordine, uno alla volta. Dopo ogni round, riassumi cos
 
 Obiettivo: assegnare un nome al report (determina il nome delle cartelle `report/<NomeProgetto>.SemanticModel/` e `.Report/` usate dalle fasi successive) e capire se l'utente ha già una lista di requisiti definita o se serve costruirla da zero con l'intervista.
 
-**Le due Domande di Apertura** (definite nell'agente `requirements-analyst`, non in questa skill: "hai già requisiti scritti, e dove?" / "hai già i dati, locali o su Fabric?") precedono questo round e ne determinano già parte dell'esito: se l'utente ha risposto di avere requisiti in un file o in chat, quella risposta **è** già `Modalità di raccolta: requisiti già forniti`, non richiederla di nuovo qui. Analogamente, se ha risposto "dati su Fabric", il tema sorgente dati è già chiuso (vedi nota Fabric più sotto): non ri-chiedere se ha file da fornire in `input/<NomeProgetto>/`.
+**La Domanda di Apertura** (definita nell'agente `requirements-analyst`, non in questa skill) precede questo round: l'agente ispeziona già `input/<NomeProgetto>/` e chiede all'utente se ci sono **altre fonti da aggiungere** — requisiti in chat, altri file, e/o tabelle su Fabric. Le fonti **non sono esclusive**: possono coesistere più fonti insieme (es. un documento Word in `input/`, requisiti aggiuntivi dettati in chat, e alcune tabelle su un Lakehouse Fabric). Non richiedere qui informazioni già emerse da quella domanda.
 
-**Prima di chiedere altro, ispeziona in autonomia la cartella `input/<NomeProgetto>/`** (elenco file, non lettura contenuto) per verificare se contiene già:
-- un file tabellare (`.xlsx` o `.csv`) da cui ricavare lo schema del db target — vale sia uno schema esplicito (tabelle/colonne elencate) sia un'**estrazione dati** (ogni file/foglio è una tabella, le intestazioni sono le colonne) — ignora eventuali file che rappresentano solo una "soluzione iniziale"/output preesistente vuoto: non è una fonte valida, trattalo come se non esistesse;
-- un file Word (`.docx`) con un documento requisiti già scritto.
+**Fonti da tracciare, ciascuna indipendentemente presente o assente:**
+- **Requisiti**: documento (`.docx` in `input/<NomeProgetto>/`), testo in chat/prompt, o entrambi (si combinano: leggi il documento e integra con quanto detto in chat, senza contraddizioni — se la chat corregge o aggiunge rispetto al documento, vince la chat perché più recente)
+- **Schema/dati**: file tabellari locali (`.xlsx`/`.csv`, schema esplicito o estrazione dati) in `input/<NomeProgetto>/`, tabelle su un Lakehouse Fabric, o entrambi insieme (alcune tabelle da un lato, altre dall'altro — è un caso legittimo, non un'ambiguità da risolvere scegliendo una sola fonte)
 
-Se la sorgente dati è Fabric (dalla Domanda di Apertura 2), non aspettarti un file tabellare per lo schema: quella parte del controllo si applica solo alla ricerca del documento Word.
+Ignora sempre come fonte una eventuale "soluzione iniziale"/output preesistente vuoto trovato in `input/<NomeProgetto>/`: non è un dato valido, trattalo come assente.
 
-Il risultato di questa ispezione determina come si continua il Round 0:
-- **Entrambi presenti (file tabellari + documento Word)**: comunicalo all'utente, imposta automaticamente `Modalità di raccolta: requisiti già forniti (fonte: documento Word in input/<NomeProgetto>/)` **senza chiederlo** (la fonte è già nota dai file trovati), poi applica direttamente la sezione [Mapping Requisiti → Schema Target](#mapping-requisiti--schema-target-quando-in-inputnomeprogetto-ci-sono-file-tabellari), **Caso A**. Questo NON è un supplemento all'intervista standard: sostituisce le domande generiche dei Round 1/3/4 ovunque il documento Word e l'Excel bastino a dedurre la risposta (vedi le condizioni "già forniti" in cima a ciascun round) — non riproporre come domande informazioni già ricavabili dai file. Le uniche domande ammesse sono quelle sui gap reali emersi da questo confronto (vedi [Refuso trasversale](#refuso-trasversale-in-entrambi-i-casi)).
-- **Sorgente Fabric + documento Word presente**: stessa logica del caso sopra (Caso A), ma il Mapping si limita a ciò che il documento Word rende noto sui nomi di tabella/colonna attesi — non inventare uno schema Fabric non ancora esplorato. Segnala che lo schema dettagliato verrà confermato in fase 1.5 (Analisi Dati) da `data-analyst`.
-- **Sorgente Fabric, nessun documento Word**: applica **Caso B**, fai domande mirate sui requisiti mancanti (non sullo schema: quello arriva dall'esplorazione Fabric in fase 1.5).
-- **Sorgente locale, manca l'uno o l'altro file (o entrambi)**: comunica all'utente cosa manca nello specifico (es. "in `input/<NomeProgetto>/` non trovo un file Excel con lo schema tabelle: mi servirebbe per proporre il mapping requisito → colonna") e applica la sezione Mapping, **Caso B** — fai domande mirate solo sul gap rilevato, non un'intervista generica, prima di procedere.
+**Determina la combinazione attiva e procedi di conseguenza:**
+- **Documento requisiti presente (in `input/` o in chat)** → spezzalo in requisiti atomici e applica [Mapping Requisiti → Schema Target](#mapping-requisiti--schema-target). Questo sostituisce le domande generiche dei Round 1/3/4 ovunque il documento stesso contenga già la risposta (audience, KPI, pagine dichiarati esplicitamente) — non riproporre come domande informazioni già scritte nel documento. Le uniche domande ammesse sono quelle sui gap reali (vedi [Refuso trasversale](#refuso-trasversale) nel reference). La presenza di file/tabelle di schema (locali o Fabric) non cambia questo criterio: non vanno ispezionati qui per dedurre risposte, solo registrati come fonte-schema per la fase 1.5 (vedi Round 2).
+- **Nessun documento requisiti** → fai domande mirate sui requisiti mancanti (Round 1/3/4 standard); l'eventuale presenza di file/tabelle di schema non sostituisce la domanda, perché il match tabella/colonna resta comunque compito di `data-analyst` in fase 1.5.
 
-Se invece nessuno dei due file è rilevante per questa richiesta e la sorgente non è Fabric (es. il report non si basa su uno schema target già pronto), prosegui con le domande standard sottostanti.
+Per ciascuna fonte-schema attiva, registra sempre la modalità di connessione corrispondente (Import per i file locali, Fabric Lakehouse per le tabelle Fabric) — non collassarle in una sola riga se sono davvero due fonti distinte per lo stesso report.
 
-Chiedi solo se non già noto dalle Domande di Apertura o dal prompt:
+Chiedi solo se non già noto dalla Domanda di Apertura o dal prompt:
 
 > Come vuoi chiamare questo report? Determinerà il nome delle cartelle del progetto (`report/<NomeProgetto>.Report/` e `.SemanticModel/`).
 
-Se l'utente ha già requisiti definiti in un file, chiedigli di **metterlo lui nella cartella `input/<NomeProgetto>/`** e poi leggilo prima di proseguire; se preferisce, può scriverli/incollarli direttamente in chat. Questa risposta determina se i Round 1 (Audience e Scopo), 3 (KPI) e 4 (Bozza Pagine) vengono condotti come intervista o dedotti direttamente dai requisiti forniti — vedi le condizioni riportate in cima a ciascun round.
+Questa risposta determina se i Round 1 (Audience e Scopo), 3 (KPI) e 4 (Bozza Pagine) vengono condotti come intervista o dedotti direttamente dai requisiti forniti — vedi le condizioni riportate in cima a ciascun round.
 
-Raccogli:
+Raccogli nel campo `Modalità di raccolta:` di `## Setup` (unico campo del template per questo, non aggiungerne altri):
 
 ```markdown
 Nome report:
-Modalità di raccolta: proposta da zero | requisiti già forniti (fonte: ...)
+Modalità di raccolta: proposta da zero | requisiti già forniti (fonte: documento in input/... | testo in chat | documento + chat)
 ```
 
-**Criterio di uscita**: il nome del report è fissato e la modalità di raccolta è decisa; se ci sono requisiti già forniti, sono stati acquisiti (file in `input/<NomeProgetto>/` o testo in chat); se la sorgente dati è Fabric, è noto almeno il nome del workspace/Lakehouse (se l'utente lo conosce già).
+Le fonti-schema attive (locale/Fabric/entrambe) qui in Round 0 servono solo per decidere quale ramo seguire — dove e come si registrano nell'output è definito nel Round 2, non vanno anticipate in `## Setup`.
+
+**Criterio di uscita**: il nome del report è fissato, la modalità di raccolta è decisa; ogni fonte di requisiti già fornita è stata acquisita (file, chat, o entrambi); per ogni fonte Fabric attiva è noto almeno il nome del workspace/Lakehouse (se l'utente lo conosce già).
 
 ### Round 1 — Audience e Scopo
 
 **Condizione**: esegui questo round solo se l'utente ha scelto "proponimi una struttura" nel Round 0.
 
-Obiettivo: capire per chi è il report e quale decisione/compito supporta.
+Obiettivo: capire per chi è il report (es. leadership vs analisti vs audience esterna — profili con esigenze molto diverse in termini di concisione, drill-down e storytelling) e quale decisione/compito supporta (es. monitorare performance, individuare anomalie, confrontare segmenti).
 
-Se sia l'audience sia il compito da svolgere sono già chiari dal prompt, riassumi la risposta dedotta invece di chiedere.
+Se sia l'audience sia il compito da svolgere sono già chiari dal prompt, riassumi la risposta dedotta invece di chiedere; altrimenti chiedili con una domanda concreta e chiusa per volta (vedi [PREFERIRE](#preferire)), una per audience e una per compito/scopo.
 
-Chiedi se l'audience non è chiara:
-
-> Per chi è principalmente questo report?
-
-Scelte raccomandate:
-
-1. Utenti  / leadership — KPI concisi, trend, rischi, decisioni
-2. Analisti — esplorazione, drill-down, comparazioni, tabelle
-4. Audience esterna — narrazione curata, storytelling guidato, slicer minimi
-
-Poi chiedi solo se il compito da svolgere non è ancora chiaro:
-
-> Cosa dovrebbe aiutarli a fare il report?
-
-Scelte raccomandate:
-
-1. Capire la storia complessiva
-2. Monitorare le performance
-3. Trovare anomalie o opportunità
-4. Confrontare entità o segmenti
-5. Prepararsi per una revisione periodica di business
-
-Raccogli:
-
-```markdown
-Audience:
-Scopo primario:
-Tono:
-Criteri di successo:
-```
+Scrivi il risultato in `## Audience e Scopo` del template (Audience, Scopo primario, Tono, Criteri di successo).
 
 **Criterio di uscita**: audience, scopo primario e tono sono fissati o dedotti e confermati dall'utente.
 
 ### Round 2 — Dati Disponibili e Granularità
 
-**Condizione**: esegui sempre questo round, indipendentemente dalla modalità scelta nel Round 0 — serve sempre sapere a quale DB agganciarsi e come i dati arriveranno, anche quando l'utente ha già una lista di requisiti pronta. **Eccezione**: se è già attivo il Caso A/B della sezione Mapping (schema target ricavabile dai file tabellari in `input/<NomeProgetto>/`), le tabelle sono già note — non richiederle di nuovo qui, popola direttamente `Tabelle/file attesi in input/<NomeProgetto>/` elencando i file/fogli tabellari già trovati. In quel caso questo round si riduce alla sola domanda sulla modalità/tipo di connessione al db reale (vedi sotto): finché non hai la risposta, tienila come voce in "Domande Aperte"; appena l'utente risponde, **spostala** in questa sezione (`Tipo di DB` / `Modalità di connessione`) di `output/<NomeProgetto>/requirements.md` — "Domande Aperte" è solo per i gap ancora irrisolti al momento della scrittura del file, non un contenitore permanente per l'informazione una volta raccolta.
+**Condizione**: esegui sempre questo round, indipendentemente dalla modalità scelta nel Round 0 — serve sempre sapere a quale DB agganciarsi e come i dati arriveranno, anche quando l'utente ha già una lista di requisiti pronta. Se in `input/<NomeProgetto>/` sono già presenti file tabellari (`.xlsx`/`.csv`), elenca direttamente i loro nomi in `Tabelle/file attesi in input/<NomeProgetto>/` (solo il nome del file/foglio, senza aprirlo per leggerne le colonne — quell'ispezione resta a `data-analyst` in fase 1.5). In quel caso questo round si riduce alla sola domanda sulla modalità/tipo di connessione al db reale (vedi sotto): finché non hai la risposta, tienila come voce in "Domande Aperte"; appena l'utente risponde, **spostala** in questa sezione (`Tipo di DB` / `Modalità di connessione`) di `output/<NomeProgetto>/requirements.md` — "Domande Aperte" è solo per i gap ancora irrisolti al momento della scrittura del file, non un contenitore permanente per l'informazione una volta raccolta.
 
 Obiettivo: stabilire a quale database si deve agganciare il report, con quale modalità di connessione, e quali tabelle servono. Questa sezione è obbligatoria e non può rimanere vuota o generica: il brief deve specificare fonte dati, schema atteso, granularità e gap noti. Il modello semantico non esiste ancora in questa fase — viene creato nella fase 2 — quindi qui non si ispeziona nessuno schema, si raccolgono solo le informazioni che serviranno a costruirlo.
 
-**Caso Fabric**: se la Domanda di Apertura 2 ha già stabilito che i dati sono su un Lakehouse Fabric, questo round si riduce a registrare `Modalità di connessione: Fabric Lakehouse`, `Tipo di DB: Fabric Lakehouse` e, se l'utente lo conosce già, il nome del workspace/Lakehouse in `Tabelle/file attesi in input/<NomeProgetto>/ (oppure workspace/Lakehouse Fabric)`. Non chiedere un'estrazione Excel/CSV né i nomi delle tabelle: lo schema reale lo esplora `data-analyst` in fase 1.5 via `fabric-lakehouse-consumption`. Se il nome del workspace/Lakehouse non è ancora noto, chiedilo una volta sola:
+**Le fonti dati possono essere multiple e coesistere** (es. alcune tabelle da un'estrazione Excel locale, altre da un Lakehouse Fabric): tratta ciascuna fonte-schema attiva (vedi Round 0) indipendentemente, senza forzare una scelta esclusiva tra locale e Fabric.
+
+**Componente Fabric** (se almeno una fonte-schema è un Lakehouse Fabric): registra `Tipo di DB` e `Modalità di connessione` includendo `Fabric Lakehouse` tra le fonti attive, e il nome del workspace/Lakehouse se l'utente lo conosce già, in `Tabelle/file attesi in input/<NomeProgetto>/ (oppure workspace/Lakehouse Fabric)`. Non chiedere un'estrazione Excel/CSV né i nomi delle tabelle per questa componente: lo schema reale lo esplora `data-analyst` in fase 1.5 via `fabric-lakehouse-consumption`. Se il nome del workspace/Lakehouse non è ancora noto, chiedilo una volta sola:
 
 > Conosci già il nome del workspace e del Lakehouse Fabric da cui leggere i dati? Se non ancora, va bene: lo risolveremo nella fase di analisi dati.
 
-Salta il resto di questo round (le domande sottostanti si applicano solo al caso locale) e vai al Criterio di uscita.
+Se **tutte** le fonti-schema attive sono Fabric (nessuna componente locale), salta il resto di questo round (le domande sottostanti si applicano alla componente locale) e vai al Criterio di uscita. Se invece è attiva anche una componente locale, continua con quanto segue per quella componente, e mantieni entrambe nell'output finale (`Modalità di connessione: Import + Fabric Lakehouse`, non una sola delle due).
 
-**Caso locale — prima di chiedere, verifica se l'informazione è già deducibile** da ciò che hai in mano, ed evita di chiedere ciò che è già ricavabile:
+**Componente locale — prima di chiedere, verifica se l'informazione è già deducibile** da ciò che hai in mano, ed evita di chiedere ciò che è già ricavabile:
 
 - Se in `input/<NomeProgetto>/` sono presenti solo file Excel/CSV (nessun riferimento a una connessione live a un database reale) e il documento requisiti/BRD, se presente, descrive i dati come un'estrazione/esportazione periodica da un sistema esterno → deduci `Modalità di connessione: Import` senza chiedere, e valorizza `Tipo di DB` con la fonte descritta (es. "estrazione periodica da tool di ticketing esterno", "file Excel/CSV" se non è nominato uno strumento specifico) invece di lasciarlo vuoto o generico.
 - Chiedi esplicitamente solo se **né** i file in `input/<NomeProgetto>/` **né** il documento requisiti chiariscono come/da dove arriveranno i dati in produzione (es. nessuna menzione di estrazione, tool sorgente, o tipo di sistema) — in quel caso la domanda resta necessaria e non va saltata.
@@ -173,21 +151,7 @@ Chiarisci sempre esplicitamente come arriveranno i dati concreti, perché questo
 
 Non chiedere di descrivere la struttura delle tabelle in dettaglio (colonne, tipi, chiavi) — quel dettaglio si ricava direttamente dai file una volta disponibili in `input/<NomeProgetto>/`, in fase 2.
 
-Raccogli le risposte come:
-
-```markdown
-Tipo di DB:
-Modalità di connessione: Import | DirectQuery | Fabric Lakehouse
-
-Tabelle/file attesi in input/<NomeProgetto>/ (oppure workspace/Lakehouse Fabric):
-- nome tabella o file, contenuto atteso in una riga (es. "vendite.xlsx — vendite giornaliere per prodotto e area")
-
-Dimensioni previste:
-- data/ora, geografia, entità, categoria, responsabile, stato, segmento
-
-Gap noti:
-- dati che l'utente vuole ma non ancora disponibili in nessuna tabella/file
-```
+Scrivi il risultato in `## Dati Disponibili e Granularità` del template (Tipo di DB, Modalità di connessione, Tabelle/file attesi, Gap noti); usa più righe in `Modalità di connessione`/`Tabelle/file attesi` solo se sono davvero attive più fonti.
 
 Chiedi solo per gap o ambiguità genuine, ad es.:
 
@@ -197,24 +161,11 @@ Chiedi solo per gap o ambiguità genuine, ad es.:
 
 ### Round 3 — KPI e Metriche Chiave
 
-**Condizione**: esegui questo round solo se l'utente ha scelto "proponimi una struttura" nel Round 0, oppure se ha requisiti già forniti ma questi non elencano già i KPI. Se i KPI sono già specificati in un file in `input/<NomeProgetto>/` o nel testo di requisiti incollato in chat, leggili da lì ed estraili invece di fare la domanda, poi riassumili per conferma. **Se è attivo il Caso A/B della sezione Mapping**, non fare questa domanda in nessun caso: i KPI vanno dedotti direttamente dai requisiti atomici già estratti dal documento Word (ogni requisito atomico che esprime una metrica/misura è un candidato KPI) — popola la tabella sotto da quella lista, senza chiedere all'utente "quali sono i KPI". Chiedi solo se, per uno specifico requisito atomico, non è chiaro se rappresenti effettivamente un KPI da mettere in primo piano o un filtro/dettaglio secondario — mai una domanda generica di raccolta KPI.
+**Condizione**: esegui questo round solo se l'utente ha scelto "proponimi una struttura" nel Round 0, oppure se ha requisiti già forniti ma questi non elencano già i KPI. Se i KPI sono già specificati in un file in `input/<NomeProgetto>/` o nel testo di requisiti incollato in chat, leggili da lì ed estraili invece di fare la domanda, poi riassumili per conferma — se un documento requisiti è stato spezzato in requisiti atomici (vedi [Mapping Requisiti → Schema Target](#mapping-requisiti--schema-target)), ogni requisito atomico che esprime una metrica/misura è un candidato KPI: popola la tabella da quella lista, senza chiedere all'utente "quali sono i KPI". Chiedi solo se, per uno specifico requisito atomico, non è chiaro se rappresenti effettivamente un KPI da mettere in primo piano o un filtro/dettaglio secondario — mai una domanda generica di raccolta KPI.
 
-Obiettivo: identificare i KPI e le metriche che il report deve mostrare, e segnalare quelli che non esistono ancora nel modello.
+Obiettivo: identificare 3-6 KPI e metriche che il report deve mostrare in primo piano, e segnalare quelli che non esistono ancora nel modello.
 
-Chiedi:
-
-> Quali sono i 3-6 KPI che questo report deve mostrare in primo piano?
-
-Per ogni KPI, annota se corrisponde a una misura esistente o va costruito nella fase 2:
-
-```markdown
-KPI:
-- <nome KPI> — misura esistente: <nome> | serve nuova misura
-- ...
-
-Calcoli mancanti segnalati per la fase 2:
-- <misura/colonna calcolata necessaria, e perché>
-```
+Chiedi con una domanda diretta se non già deducibile dal contesto. Per ogni KPI raccolto, annota se corrisponde a una misura esistente o va costruito nella fase 2, scrivendo il risultato in `## KPI e Metriche Chiave` del template.
 
 **Criterio di uscita**: sono elencati 3-6 KPI, ciascuno marcato come misura esistente o da costruire in fase 2.
 
@@ -222,98 +173,25 @@ Calcoli mancanti segnalati per la fase 2:
 
 **Condizione**: esegui questo round solo se l'utente ha scelto "proponimi una struttura" nel Round 0, oppure se ha requisiti già forniti ma questi non indicano già numero di pagine, visual desiderati o layout di massima. Se queste informazioni sono già nei requisiti forniti, salta la domanda su pagine/visual e riassumi quanto dedotto; la domanda sulla direzione di design generale (tono) resta comunque utile da porre se non è già chiara.
 
-Obiettivo: tracciare per ciascuna pagina lo scopo, l'elenco dei visual desiderati (uno per riga, non un unico riepilogo generico) e i filtri/slicer previsti, più una direzione di design generale. Questo non è ancora un layout meccanico pixel-per-pixel né un archetipo grafico (la scelta dell'archetipo visivo resta competenza di `powerbi-report-design` nella fase 3) — ma deve comunque essere specifico: elencare i singoli visual per nome/tipo (es. "line chart trend per periodo", "card KPI soddisfazione media") e i filtri concreti che si applicano a quella pagina, non solo una descrizione sommaria a parole.
+Obiettivo: tracciare per ciascuna pagina lo scopo, l'elenco dei visual desiderati (uno per riga, non un unico riepilogo generico) e i filtri/slicer previsti, più una direzione di design generale in prosa (tono, uso del colore a livello concettuale, disposizione generale). Questo non è ancora un layout meccanico pixel-per-pixel né un archetipo grafico (competenza di `powerbi-report-design` in fase 3) — ma deve comunque essere specifico: visual singoli per nome/tipo (es. "line chart trend per periodo"), filtri concreti per pagina, non descrizioni sommarie.
 
-Chiedi solo dopo aver applicato ciò che è già noto dai round precedenti:
+Chiedi solo dopo aver applicato ciò che è già noto dai round precedenti: numero di pagine attese, per ciascuna scopo/visual/filtri, e la direzione di design generale (tono, eventuali preferenze di disposizione/colore).
 
-> Quante pagine ti aspetti? Per ciascuna: qual è lo scopo, quali visual specifici vorresti vedere (es. card KPI, line chart trend, barre per categoria, tabella dettaglio, ecc. — elencali singolarmente) e quali filtri/slicer dovrebbero essere disponibili in quella pagina?
-
-Bozza elenco pagine, con visual e filtri elencati singolarmente per pagina (non un layout meccanico con coordinate/griglia — quello resta compito di `report-builder` in fase 3, ma l'elenco di visual e filtri per pagina va comunque specificato qui):
-
-```markdown
-Bozza pagine:
-1. <Nome pagina> — scopo: <a cosa serve questa pagina>
-   - Visual: <primo visual desiderato>
-   - Visual: <secondo visual desiderato>
-   - Visual: <altri visual, uno per riga; marcare "(opzionale)" se non essenziale>
-   - Filtri: <elenco filtri/slicer proposti per questa pagina>
-2. ...
-```
-
-Chiedi la direzione di design generale, incluse preferenze concrete se l'utente le ha (tono, palette/uso del colore a livello concettuale, disposizione generale degli elementi in pagina) — senza però arrivare a coordinate, griglie pixel o specifiche di canvas:
-
-> Che sensazione dovrebbe dare questo report? (es. pulito ed executive, denso e analitico, narrativo e story-driven) E hai preferenze di massima su come disporre gli elementi (es. KPI in alto, filtri sempre visibili) o su come usare i colori (es. un colore per canale/priorità)?
-
-Raccogli:
-
-```markdown
-Direzione di design (bozza, in prosa ma con indicazioni concrete se disponibili):
-- Tono:
-- Note/preferenze: <es. disposizione generale degli elementi, uso del colore per distinguere categorie/priorità/canali, densità informativa desiderata>
-```
+Scrivi il risultato in `## Numero Pagine, Visual Desiderati e Layout` e `## Direzione di Design (bozza)` del template.
 
 Restano fuori scope solo il blocco YAML `Design Brief:`, coordinate/griglie precise o un `layout_contract` vero e proprio — quelli sono compito di `report-builder`/`powerbi-report-design` in fase 3. Indicazioni di stile in prosa (anche se concrete) sono invece incoraggiate qui, se l'utente le fornisce o se sono deducibili dal contesto.
 
-**Criterio di uscita**: per ogni pagina esistono scopo, elenco di visual specifici (non un'unica descrizione generica) e filtri proposti; esiste inoltre una direzione di design in prosa (tono + note concrete su stile/colori/impaginazione generale). Non è richiesto un layout meccanico con coordinate/griglia pixel-per-pixel: quello resta compito di `report-builder` in fase 3.
+Popola anche `## Filtri/Slicer` nel template: è un riepilogo aggregato dei filtri già raccolti per pagina qui sopra (un bullet per dimensione filtrabile, con ambito globale o per pagina) — non richiede domande proprie, non lasciarlo vuoto se filtri/pagina sono stati raccolti.
 
-## Mapping Requisiti → Schema Target (quando in input/<NomeProgetto>/ ci sono file tabellari)
+**Criterio di uscita**: per ogni pagina esistono scopo, elenco di visual specifici (non un'unica descrizione generica) e filtri proposti; esiste inoltre una direzione di design in prosa (tono + note concrete su stile/colori/impaginazione generale) e il riepilogo in `## Filtri/Slicer`. Non è richiesto un layout meccanico con coordinate/griglia pixel-per-pixel: quello resta compito di `report-builder` in fase 3.
 
-Questa sezione si applica a un caso distinto dal normale Round 2: quando in `input/<NomeProgetto>/` sono già presenti uno o più **file tabellari** (`.xlsx` o `.csv`) da cui ricavare le tabelle/colonne dello schema del db target. Valgono **entrambe** le forme:
-
-- **schema esplicito** — un workbook che elenca tabelle e colonne del db target;
-- **estrazione dati** — file di dati veri e propri: ogni file (o foglio Excel) è una tabella, le **intestazioni di colonna** sono le colonne dello schema.
-
-**Un'estrazione dati NON è un motivo per saltare il mapping**: lo schema si ricava dalle intestazioni. Scrivere "Non applicabile: solo un estratto CSV dei dati" è esattamente l'errore da non ripetere — il mapping è "Non applicabile" solo quando in `input/<NomeProgetto>/` non c'è **alcun** file tabellare.
-
-In questo caso, oltre alla normale raccolta requisiti, produci anche una proposta di mapping requisito → tabella/colonna con relativa verifica di allineamento. Questa attività si aggiunge ai Round 0-4 quando lo schema è ricavabile dai file in ingresso; se invece non è disponibile alcun file tabellare, il dettaglio colonne resta compito della fase 2 (`semantic-modeler`), come già previsto dal Round 2.
-
-### Fonte da ignorare
-
-Se nell'input è presente anche una "soluzione iniziale" (una proposta di mapping o di modello preesistente), **non leggerla e non usarla come fonte**: è vuota/segnaposto e va ignorata. Le uniche fonti valide per il mapping sono il documento requisiti (se fornito) e i file Excel dello schema target.
-
-### Caso A — Il documento requisiti è fornito
-
-1. Leggi lo schema target dai file tabellari in `input/<NomeProgetto>/`: da uno schema esplicito, le tabelle/colonne elencate; da un'estrazione dati, ogni file/foglio è una tabella e le intestazioni di colonna sono le colonne dello schema.
-2. Leggi il documento dei requisiti e **spezzalo in requisiti atomici** (un'esigenza verificabile per voce).
-3. Per ciascun requisito atomico:
-   - proponi quale tabella/colonna dello schema target usare;
-   - verifica se la colonna proposta è effettivamente allineata al requisito (tipo dato, naming, granularità, ecc.) e segnala eventuali disallineamenti.
-4. Se dal documento requisiti non emerge chiaramente come si lavorerà in fase di import (es. manca il tipo di db reale a cui ci si collegherà, o la modalità/tipo di connessione), **non assumere né inventare**: fai domande specifiche solo su quei punti mancanti, mai un'intervista generica — quelle informazioni non sono deducibili né dai requisiti né dallo schema.
-
-### Caso B — Il documento requisiti NON è fornito
-
-Non procedere per supposizioni. Fai domande specifiche e mirate per raccogliere i requisiti mancanti (mai domande generiche o aperte) — usa lo schema target già disponibile in `input/<NomeProgetto>/` per rendere le domande concrete (es. riferisciti a tabelle/colonne reali invece di chiedere in astratto "che dati ti servono?"). Solo dopo aver raccolto le risposte, procedi con la stessa logica del Caso A (spezzare in requisiti atomici → proposta tabella/colonna → verifica allineamento).
-
-### Refuso trasversale (in entrambi i casi)
-
-Fermati e chiedi — non proseguire mai con ipotesi implicite — in ciascuno di questi casi:
-
-- **Manca lo schema/le colonne della sorgente dati**: non è disponibile in `input/<NomeProgetto>/` alcun file tabellare (`.xlsx`/`.csv`, schema esplicito o estrazione dati) da cui ricavare tabelle/colonne del db target, o è ambiguo quale file rappresenti quale tabella.
-- **Manca la modalità/tipo di connessione al db reale**: non è chiaro il tipo di db a cui ci si collegherà in fase di import, o la modalità (Import/DirectQuery), quando questa informazione servirà alla fase 2.
-- **Il requisito è ambiguo rispetto alle tabelle disponibili**: per un requisito atomico non è possibile proporre un match tabella/colonna affidabile (più colonne candidate senza un criterio per scegliere, oppure nessuna colonna sembra corrispondere).
-
-In ogni caso, le domande devono essere puntuali e riferite al gap specifico individuato, mai un questionario generico. Riporta queste domande aperte (se presenti) in una sotto-sezione ben visibile dentro **Mapping Requisiti → Schema Target** di `output/<NomeProgetto>/requirements.md`, così l'orchestrator non delega alla fase 2 finché non sono risolte.
-
-### Output
-
-Aggiungi a `output/<NomeProgetto>/requirements.md` la sezione **Mapping Requisiti → Schema Target**, con una riga per requisito atomico:
-
-```markdown
 ## Mapping Requisiti → Schema Target
-| Requisito atomico | Tabella.Colonna proposta | Allineato? | Note |
-|---|---|---|---|
-| <requisito> | <Tabella.Colonna> | Sì / No | <motivo se No: tipo dato, naming, granularità...> |
 
-### Domande Aperte
-<presente solo se sono emersi gap bloccanti — vedi Refuso trasversale; l'orchestrator non passa alla fase 2 finché questa lista non è vuota o risolta in chat>
-- <domanda puntuale sul gap specifico>
-```
+Si applica quando è disponibile un documento/testo di requisiti (`input/<NomeProgetto>/` o chat) da cui estrarre requisiti atomici. In questo caso, oltre alla normale raccolta requisiti, spezza il documento in requisiti atomici e popola la sezione `## Mapping Requisiti → Schema Target` del template: un match `Tabella.Colonna` solo se dichiarato esplicitamente nei requisiti, altrimenti `Da confermare in fase 1.5` — **mai ispezionare file locali o Fabric per dedurre il match**, è compito esclusivo di `data-analyst`. È "Non applicabile" solo quando non c'è alcun documento/testo di requisiti da cui estrarre requisiti atomici.
 
-Questa sezione si aggiunge a quelle previste dal template quando questa modalità è applicabile — non sostituisce il Round 2, che resta la fonte di verità per i casi in cui lo schema del db target non è ancora disponibile in ingresso.
+Procedura completa (requisiti atomici, gestione dei match non dichiarati, casi in cui fermarsi e chiedere): vedi [references/requirements-mapping.md](references/requirements-mapping.md).
 
-### Elaborazione incrementale per file grandi
-
-Quando converti o leggi i file di `input/<NomeProgetto>/` (schema Excel o documento Word) per il mapping, tieni conto della gestione dei token: se un file convertito è grande (molti fogli/tabelle nell'Excel, molte pagine nel Word), non caricarlo tutto in un solo colpo — elaboralo a blocchi (es. un foglio Excel alla volta, o il documento Word diviso per sezioni/capitoli), riassumendo via via i requisiti atomici e le proposte di mapping già estratte prima di passare al blocco successivo. Convalida sempre il flusso partendo da file piccoli prima di applicarlo a input di grandi dimensioni.
+Questa attività si aggiunge ai Round 0-4 quando è disponibile un documento requisiti; il dettaglio colonne reale (locale o Fabric) resta sempre compito della fase 1.5 (`data-analyst`), come già previsto dal Round 2.
 
 ## Vincoli, Rischi, Note (trasversale)
 
@@ -321,165 +199,23 @@ In qualsiasi round può emergere un vincolo, un rischio o una nota che non rient
 
 ## Output
 
-Produci esattamente un file: `output/<NomeProgetto>/requirements.md`, contenente le informazioni raccolte in tutti i round.
+Produci esattamente un file: `output/<NomeProgetto>/requirements.md`. Il file va creato dal template **subito**, al Round 0 (l'orchestrator lo copia dal template prima della delega — vedi `requirements-analyst.agent.md`), e **compilato progressivamente**, sezione per sezione, appena ciascun round viene confermato dall'utente — non tenere le risposte solo in conversazione fino alla fine: il file sul disco è lo stato di avanzamento reale della raccolta, aggiornato passo dopo passo, non solo il riepilogo finale.
 
-**Procedura vincolata (non facoltativa): parti sempre da una copia letterale del file, mai da una riscrittura a memoria.**
+Le regole meccaniche di scrittura (come si scrive ogni sezione, quando riscriverne una già compilata, come reagire a un file non conforme al template) sono responsabilità dell'agente — vedi "Come scrivo il file" in `requirements-analyst.agent.md`. Qui in skill conta solo *quando* una sezione si applica o resta "Non applicabile" (vedi [OBBLIGATORIO](#obbligatorio)) — non c'è mai un'intestazione senza il suo contenuto.
 
-1. Come **primissima azione** quando è il momento di scrivere l'output (non prima, non "a mente" durante l'intervista): se `output/<NomeProgetto>/requirements.md` esiste già — per qualunque motivo: report precedente, bozza interrotta, versione anteriore dello stesso report — **cancellalo**, poi esegui letteralmente una copia del file `.github/skills/powerbi-requirements-gathering/assets/requirements-template.md` in `output/<NomeProgetto>/requirements.md` usando il tool `execute` con una **copia binaria**: `Copy-Item` in PowerShell, `cp` in bash, `shutil.copyfile` in Python. **Mai** `Get-Content`/`Set-Content`, redirezione `>` o rilettura+riscrittura del testo: su Windows corrompono gli accenti UTF-8 (es. `Granularità` → `GranularitÃ`), e un titolo corrotto non è più identico al template. Subito dopo la copia, **verifica che sia andata a buon fine** (exit code 0 e `output/<NomeProgetto>/requirements.md` esistente): se fallisce — path errato, template non trovato, cartella `output/<NomeProgetto>/` non ancora creata — fermati e risolvi il problema, non ripiegare mai sulla riscrittura dei titoli a mano. La copia deve partire da un file pulito: mai sovrascrivere parzialmente, integrare o "riciclare" contenuto del file esistente — non ricopiare i titoli "a memoria" scrivendo il file da zero con un editor di testo: usa un comando di copia reale, in modo che i titoli e la loro struttura esatta (incluso l'ordine, `##` vs `###`, e il segnaposto `## Mapping Requisiti → Schema Target` anche quando non applicabile) siano garantiti bit-per-bit identici al template.
-2. Da quel file copiato, **modifica solo il testo sotto ciascuna intestazione** con quanto raccolto nei round corrispondenti, usando il tool di editing file (che preserva l'encoding UTF-8) — mai `Set-Content`/`Out-File` senza encoding esplicito. Non toccare mai le righe `#`/`##`/`###` stesse: non rinominarle, non riordinarle, non aggiungerne, non rimuoverne. Se una sezione non si applica (es. "Mapping Requisiti → Schema Target" solo quando in `input/<NomeProgetto>/` non c'è **alcun** file tabellare — un'estrazione dati CSV/Excel È uno schema valido, ricavato dalle intestazioni), lascia l'intestazione al suo posto e scrivi sotto una nota breve tipo "Non applicabile: nessun file tabellare in input/<NomeProgetto>/" invece di cancellare la sezione.
-3. Se in qualunque momento ti accorgi di aver scritto `output/<NomeProgetto>/requirements.md` senza essere partito da questa copia letterale (es. lo hai generato con l'editor a partire da una bozza mentale della struttura), **fermati, cancella il file e ripeti dal passo 1** — non provare a "correggere a posteriori" i titoli di un file già scritto a mano libera: è esattamente il modo in cui in passato sono comparsi titoli numerati inventati al posto di quelli del template.
-4. **Ogni sezione va scritta una volta sola, per intero, in un unico edit.** Quando compili il testo sotto un'intestazione, sostituisci tutto il segnaposto/contenuto esistente di quella sezione con la versione completa e definitiva raccolta fino a quel round — non limitarti ad "aggiungere in fondo" nuove righe lasciando quelle vecchie, e non lasciare la stessa intestazione vuota mentre il suo contenuto compare più sotto sparso tra altre sezioni. Se in un round successivo emergono nuove informazioni per una sezione già compilata (es. l'utente corregge o integra un round precedente), **riscrivi l'intera sezione da capo con il testo aggiornato**, sostituendo la versione precedente — non giustapporre un secondo blocco. Ogni frase del file deve stare fisicamente sotto la propria intestazione e non deve esistere più di un blocco di contenuto per la stessa intestazione nel file finale.
-5. Non lasciare mai affermazioni contraddittorie tra loro nello stesso file (es. "Non applicabile" seguito più sotto da un elenco popolato per la stessa sezione): se una sezione è compilabile, compilala per intero e rimuovi qualunque "Non applicabile" residuo di una bozza precedente.
-
-Questo non è una linea guida stilistica: se il file finale non ha le stesse intestazioni del template (incluso "Dati Disponibili e Granularità" con `Tipo di DB` / `Modalità di connessione`, valorizzata o messa in "Domande Aperte" se ignota), la fase 1 non è completa.
+Se il file finale non ha le stesse intestazioni del template, la fase 1 non è completa: non è una linea guida stilistica.
 
 ### Cosa NON scrivere mai in `output/<NomeProgetto>/requirements.md`
 
 Questo output descrive **cosa serve**, non **come costruirlo**: la modellazione è compito esclusivo della fase 2 (`semantic-modeler`). Di conseguenza:
 
 - **Non inventare né scrivere formule DAX** (misure complete con `SUM`, `CALCULATE`, `SUMX`, ecc.): per ogni KPI/metrica limitati a segnalare in linguaggio naturale se serve una nuova misura e su quale dato si baserebbe — la formula la scrive `semantic-modeler` in fase 2.
-- **Non inventare nomi di tabelle o schema a stella** (es. `FactSales`, `DimDate`, `DimProduct`) se non sono i nomi reali dei fogli/tabelle trovati in `input/<NomeProgetto>/`. Usa sempre e solo i nomi effettivi (es. i fogli `Vendite`, `Prodotti`, `Negozi` se sono quelli presenti nell'Excel) — decidere fact/dimension, naming e relazioni del modello è competenza della fase 2, non di questo output.
+- **Non inventare nomi di tabelle o schema a stella** (es. `FactSales`, `DimDate`, `DimProduct`): un nome di tabella/colonna compare nell'output solo se dichiarato esplicitamente nei requisiti — mai un nome dedotto o inventato ispezionando i file, quello è compito di `data-analyst` in fase 1.5. Decidere fact/dimension, naming e relazioni del modello resta competenza della fase 2.
 - **Non scrivere una sezione "Relazioni e modello"** o equivalente: le relazioni tra tabelle le stabilisce `semantic-modeler`, non `requirements-analyst`.
-- **Non "concordare" tu KPI o mapping**: per ogni requisito atomico proponi il match e verificane l'allineamento (vedi Mapping Requisiti → Schema Target), ma quando l'allineamento non è chiaro o manca un dato, fermati e chiedi — non decidere al posto dell'utente.
-
-## Esempio Completo di Output (few-shot)
-
-Questo è un esempio reale e approvato di `output/<NomeProgetto>/requirements.md`, prodotto nel Caso A (schema Excel + documento Word già entrambi disponibili in `input/<NomeProgetto>/`). Usalo come riferimento diretto per il livello di dettaglio atteso in ogni sezione — in particolare per "Numero Pagine, Visual Desiderati e Layout" (un `Visual:` per riga, sempre seguito da `Filtri:`) e per "Direzione di Design" (note concrete su disposizione e uso del colore, non solo aggettivi generici). Non copiare contenuti specifici di questo esempio (nomi di tabelle, KPI, pagine) in un progetto diverso: replica solo la **struttura, la granularità e lo stile di scrittura**, popolandoli con i dati reali del progetto corrente.
-
-```markdown
-# Requisiti del Report
-
-## Setup
-- Nome report: Assistenza Clienti
-- Modalità di raccolta: requisiti già forniti (fonte: `input/assistenza-clickhelp/BRD_Report_BI_Assistenza_ClickHelp.docx` + `input/assistenza-clickhelp/Base_Dati_Assistenza_ClickHelp.xlsx`)
-
-## Audience e Scopo
-- Audience: responsabile del supporto, team leader del supporto, management aziendale
-- Scopo primario: monitorare in modo continuativo il volume e l'andamento dei ticket di assistenza, il tempo di risoluzione, il carico di lavoro degli agenti e dei team, e la soddisfazione dei clienti
-- Tono: operativo-analitico, chiaro e immediato, con enfasi su KPI rapidi e trend utili all'azione
-- Criteri di successo: riduzione del reporting manuale, visibilità rapida su ticket aperti/chiusi e tempo di risoluzione, identificazione di agenti/team ad alto carico, capacità di individuare categorie e clienti più impattanti, gestione corretta dei valori mancanti di soddisfazione
-
-## Dati Disponibili e Granularità
-- Tipo di DB: estrazione periodica da tool di ticketing (attualmente fornito come Excel di esempio)
-- Modalità di connessione: Import
-- Tabelle/file attesi in input/assistenza-clickhelp/:
-  - `Base_Dati_Assistenza_ClickHelp.xlsx` con fogli:
-    - `Ticket`
-    - `Agenti`
-- Gap noti:
-  - Non è definita una connessione diretta al tool di ticketing reale; servono conferme su come verranno forniti i dati in produzione
-  - Il foglio `Ticket` contiene `Soddisfazione` parziale (52 valori mancanti) e la reportistica deve gestire questi casi senza distorcere la media
-  - Non è presente una tabella clienti separata; il campo `Cliente` è attualmente disponibile solo nel foglio `Ticket`
-  - Non sono richieste SLA contrattuali né assegnazione automatica dei ticket in questa prima versione
-
-## Mapping Requisiti → Schema Target
-| Requisito atomico | Tabella.Colonna proposta | Allineato? | Note |
-|---|---|---|---|
-| Monitorare quanti ticket sono aperti e chiusi | Ticket.ID_Ticket, Ticket.Data_Apertura, Ticket.Data_Chiusura | Sì | `Data_Chiusura` null indica ticket ancora aperto; serve calcolare backlog e stato aperto/chiuso |
-| Calcolare il tempo di risoluzione dei ticket | Ticket.Tempo_Risoluzione_Ore | Sì | Misura media/mediana e distribuzione per categoria/priorità/team |
-| Analizzare il peso delle categorie di problemi | Ticket.Categoria | Sì | Categorie includono Bug Software, Domanda Fatturazione, Problema Accesso, ecc. |
-| Misurare il carico di lavoro per agente e per team | Ticket.Agente + Agenti.Team | Sì | `Agente` è presente in Ticket; `Team` è su Agenti con relazione many-to-one |
-| Monitorare la soddisfazione clienti | Ticket.Soddisfazione | Sì | Gestire i valori mancanti e calcolare media solo sui ticket valutati |
-| Filtrare per canale del ticket | Ticket.Canale | Sì | Canali: Email, Portale Self-Service, Chat, Telefono |
-| Analizzare la priorità dei ticket | Ticket.Priorita | Sì | Priorità: Bassa, Media, Alta, Critica |
-| Identificare i clienti più attivi | Ticket.Cliente | Sì | Cliente può essere usato come attributo di dimensione cliente nel report |
-| Segmentare i ticket per periodo e trend | Ticket.Data_Apertura, Ticket.Data_Chiusura | Sì | Permette trend mese su mese e confronto periodi |
-| Gestire dati anagrafici agenti | Agenti.Agente, Agenti.Team, Agenti.Data_Assunzione | Sì | Utili per analisi agenti, carico e storico team |
-
-### Domande Aperte
-- Come verranno forniti i dati di produzione dal tool di ticketing: come file Excel estratto, tabella database o altra integrazione?
-- Il campo `Cliente` deve essere trattato come dimensione a sé stante oppure si mantiene solo come attributo della tabella `Ticket`?
-- È necessario supportare un concetto di ticket aperto con `Data_Chiusura` assente oppure si può assumere che tutti i ticket chiusi abbiano una data valorizzata?
-
-## KPI e Metriche Chiave
-- KPI (esistenti vs. che necessitano nuove misure):
-  - Numero ticket aperti / numero ticket chiusi — richiede misura sui ticket e stato aperto/chiuso
-  - Backlog ticket aperti — richiede calcolo su ticket senza data di chiusura
-  - Tempo medio di risoluzione — nuova misura su `Tempo_Risoluzione_Ore`
-  - Tempo mediano di risoluzione — nuova misura per robustezza
-  - Numero ticket per agente / per team — nuove misure di conteggio
-  - Soddisfazione media clienti — nuova misura su `Soddisfazione` con esclusione dei valori null
-  - Ticket per categoria, canale, priorità — misure/visual basate su attributi esistenti
-  - Top clienti per numero ticket — misura di ranking
-- Calcoli mancanti segnalati per la fase 2:
-  - Conteggio ticket distinti (`ID_Ticket`)
-  - Stato ticket aperto/chiuso basato su `Data_Chiusura`
-  - Media e mediana del tempo di risoluzione
-  - Media di soddisfazione cliente con gestione dei valori mancanti
-  - Metriche di distribuzione per agente/team/categoria/canale/priorità
-
-## Numero Pagine, Visual Desiderati e Layout
-1. Executive Summary — scopo: visione sintetica dei KPI, trend e anomalie.
-   - Visual: card KPI (ticket aperti, chiusi, tempo medio di risoluzione, soddisfazione media)
-   - Visual: line chart trend ticket aperti/chiusi per periodo
-   - Visual: barra o donut per canale ticket
-   - Visual: barra per priorità o categoria
-   - Filtri: periodo, canale, priorità, agente/team
-2. Analisi Agenti e Team — scopo: carico operativo e performance dei collaboratori.
-   - Visual: barre per numero ticket per agente e per team
-   - Visual: tabella dettagliata dei ticket recenti con stato, categoria, canale, agente
-   - Visual: scatter/heatmap per tempo di risoluzione vs. priorità (opzionale)
-   - Filtri: periodo, team, agente, categoria
-3. Qualità e Clienti — scopo: soddisfazione e clienti più attivi.
-   - Visual: KPI soddisfazione media e percentuale ticket valutati
-   - Visual: top clienti per numero ticket
-   - Visual: barre per soddisfazione media per categoria o agente
-   - Filtri: periodo, canale, categoria
-
-## Filtri/Slicer
-- Periodo (Data_Apertura) — globale
-- Canale — globale
-- Priorità — globale
-- Team / Agente — specifico per pagina Analisi Agenti e Team
-- Categoria — specifico per pagine Analisi Agenti e Team, Qualità e Clienti
-
-## Direzione di Design (bozza)
-- Tono: operativo e professionale, con focus su numeri chiari e confronti periodici
-- Note/preferenze: layout a colonne nette, KPI in alto, filtri subito visibili, uso di colori distinti per canale/priorità senza sovracaricare la pagina
-
-## Vincoli, Rischi, Note
-- Vincolo: prima versione senza RLS granulare, chi ha accesso vede tutti i dati
-- Vincolo: aggiornamento dati giornaliero con import da estrazione periodica
-- Rischio: i valori mancanti di `Soddisfazione` possono falsare la percezione se non vengono gestiti come `non rilevato`
-- Nota: il report non deve includere SLA contrattuali né logica di assegnazione automatica dei ticket in questa release iniziale
-```
-
-## Autoverifica Obbligatoria Prima di Mostrare l'Output
-
-Prima di presentare `output/<NomeProgetto>/requirements.md` all'utente o di chiedere approvazione, **scrivi per intero, come testo del tuo turno (non solo nel ragionamento interno), la checklist seguente compilata riga per riga**. Non è un controllo da fare "a mente": se la checklist non compare scritta esplicitamente prima dell'output, l'autoverifica non è stata eseguita e il file non può essere considerato pronto.
-
-```
-CHECKLIST CONFORMITÀ TEMPLATE — output/<NomeProgetto>/requirements.md
-[ ] Ho copiato output/<NomeProgetto>/requirements.md a partire da .github/skills/powerbi-requirements-gathering/assets/requirements-template.md con un comando reale (execute), non riscritto i titoli a memoria: Sì/No → 
-[ ] Il comando di copia è andato a buon fine (exit code 0 e output/<NomeProgetto>/requirements.md creato)? Sì/No → 
-[ ] La copia è stata binaria (Copy-Item/cp/shutil.copyfile) e i caratteri accentati nei titoli sono integri (es. "Granularità", non "GranularitÃ")? Sì/No → 
-[ ] Riga 1 template "## Setup"                                          → titolo effettivo nel file: ____________________  → identico? Sì/No
-[ ] Riga 2 template "## Audience e Scopo"                                → titolo effettivo nel file: ____________________  → identico? Sì/No
-[ ] Riga 3 template "## Dati Disponibili e Granularità"                  → titolo effettivo nel file: ____________________  → identico? Sì/No
-[ ] Riga 4 template "## Mapping Requisiti → Schema Target"               → titolo effettivo nel file: ____________________  → identico? Sì/No
-[ ] Riga 5 template "## KPI e Metriche Chiave"                           → titolo effettivo nel file: ____________________  → identico? Sì/No
-[ ] Riga 6 template "## Numero Pagine, Visual Desiderati e Layout"       → titolo effettivo nel file: ____________________  → identico? Sì/No
-[ ] Riga 7 template "## Filtri/Slicer"                                  → titolo effettivo nel file: ____________________  → identico? Sì/No
-[ ] Riga 8 template "## Direzione di Design (bozza)"                    → titolo effettivo nel file: ____________________  → identico? Sì/No
-[ ] Riga 9 template "## Vincoli, Rischi, Note"                          → titolo effettivo nel file: ____________________  → identico? Sì/No
-[ ] Esistono nel file titoli ## o ### assenti da questo elenco (numerazione propria, sezioni improvvisate tipo "Ipotesi sui dati", "Esigenze di pulizia dati", "### Domande Aperte" è l'unica sotto-sezione ammessa)? Sì/No → se Sì, quali: ____________________
-[ ] Per ciascuna delle 9 intestazioni sopra, esiste un SOLO blocco di contenuto nel file (nessuna intestazione appare vuota mentre il suo contenuto è scritto altrove, nessun secondo blocco che ripete/aggiorna una sezione già compilata più sopra o più sotto)? Sì/No → se No, quali intestazioni hanno contenuto duplicato o spaiato: ____________________
-[ ] Nessuna riga o tabella nel file è "orfana" (es. intestazione di tabella markdown senza righe dati sopra/sotto di pertinenza, bullet isolato che non appartiene alla sezione in cui si trova fisicamente)? Sì/No
-[ ] Nessuna sezione contiene affermazioni tra loro contraddittorie (es. "Non applicabile" seguito da un elenco popolato per la stessa sezione)? Sì/No
-ESITO: CONFORME solo se ogni riga ha la risposta attesa: Sì ovunque, TRANNE la riga "Esistono nel file titoli ## o ### assenti da questo elenco", che deve essere No. Altrimenti: NON CONFORME.
-```
-
-Regole:
-1. Compila ogni riga leggendo davvero `.github/skills/powerbi-requirements-gathering/assets/requirements-template.md` e il file appena scritto — non dare per scontato il valore, scrivi il titolo effettivo che hai trovato.
-2. Se anche una sola riga risulta fuori dall'esito atteso → l'esito è NON CONFORME: **non mostrare il file né chiedere approvazione**. Cancella `output/<NomeProgetto>/requirements.md`, ripeti il passo 1 della sezione [Output](#output) (copia letterale via `execute` del template, poi compilazione sotto le intestazioni esistenti, una sola volta per sezione come da regola 4-5 sopra) e ripeti da capo questa checklist su file rigenerato.
-3. Con ESITO: CONFORME, esegui infine il gate deterministico: `python scripts/validate_requirements.py <NomeProgetto>` via `execute`. Lo script riverifica intestazioni, encoding, segnaposto residui, campi chiave e la presenza del Mapping quando in `input/<NomeProgetto>/` ci sono file tabellari. Solo con **exit code 0** passa al Gate di Approvazione sottostante; se fallisce, rigenera il file dal template seguendo gli errori elencati e ripeti checklist + script.
-
-Questo controllo va reso visibile ed esplicito apposta: un confronto "mentale" o discorsivo ("segui il template", "confronta i titoli") si è già dimostrato insufficiente più volte a evitare titoli inventati o sezioni mancanti (es. `## Mapping Requisiti → Schema Target` omessa, `## Vincoli, Rischi, Note` assente, numerazione propria al posto dei titoli del template) — costringere a scrivere la checklist riga per riga, con il titolo trovato affiancato a quello atteso, rende visibile ed evidente uno scostamento che altrimenti passerebbe inosservato.
+- **Non "concordare" tu KPI o mapping**: per ogni requisito atomico riporta il match solo se dichiarato esplicitamente, altrimenti marca "Da confermare in fase 1.5" (vedi Mapping Requisiti → Schema Target) — non decidere né verificare l'allineamento al posto di `data-analyst`.
 
 ## Gate di Approvazione
 
-Dopo aver scritto `output/<NomeProgetto>/requirements.md`, fai esattamente una domanda di approvazione:
+Criteri di completezza prima di dichiarare il file pronto: tutte le sezioni compilate, intestazioni identiche al template, nessun placeholder vuoto, nessuna sezione duplicata o orfana (vedi [OBBLIGATORIO](#obbligatorio)). La procedura di validazione (chi esegue `validate_requirements.py`, quando richiedere l'approvazione all'utente) è definita in `requirements-analyst.agent.md`, sezione "Fine intervista" — non va ripetuta qui.
 
-> Approvi questi requisiti così possiamo passare alla fase di modello semantico?
-
-Non passare a `semantic-modeler`/fase 2 finché l'utente non approva. Se l'utente richiede modifiche, rivedi `output/<NomeProgetto>/requirements.md` e chiedi di nuovo.
+Non passare a `semantic-modeler`/fase 2 finché l'utente non approva esplicitamente. Se l'utente richiede modifiche, rivedi `output/<NomeProgetto>/requirements.md` e ripeti il gate.
