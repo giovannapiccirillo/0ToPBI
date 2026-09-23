@@ -1,5 +1,3 @@
-<!-- Adattato da microsoft/skills-for-fabric skills/sqldw-cli/references/consumption/discovery-queries.md -->
-
 # Query di Schema Discovery Estese
 
 Query per l'esplorazione approfondita dello schema, oltre alla sequenza base

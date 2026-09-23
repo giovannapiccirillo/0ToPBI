@@ -1,7 +1,3 @@
-<!-- Adattato da microsoft/skills-for-fabric skills/sqldw-cli/references/consumption/script-templates.md
-     e consumption-cli-quickref.md (fusi: stesso scope, pattern di query per
-     data-analyst — vedi SKILL.md per le regole obbligatorie/limiti). -->
-
 # Pattern di Query per Compiti Ricorrenti
 
 Pattern concisi per `execute_query`, per i compiti che `data-analyst` ripete
@@ -14,7 +10,7 @@ ripetuta qui). Per la superficie T-SQL completa vedi
 ## Query Singola
 
 ```text
-execute_query(workspaceId, itemId, "SET NOCOUNT ON; SELECT * FROM dbo.FactSales WHERE SaleDate >= '2025-01-01'")
+execute_query(workspaceId, itemId, "SET NOCOUNT ON; SELECT TOP 20 * FROM dbo.FactSales")
 ```
 
 ## Multi-Statement (Batch Singolo)
@@ -31,40 +27,57 @@ SELECT COUNT(*) AS TotalRows FROM dbo.FactSales;
 > Per più result set, usa chiamate `execute_query` separate: il tool
 > restituisce solo l'ultimo result set di un batch multi-statement.
 
-## Intervalli Parametrizzati
+## Pattern per Probe di Modellazione
+
+Pattern per il contenuto obbligatorio di `data-analysis.md` (chiave
+candidata, relazioni, cardinalità/valori, range — vedi
+[data-analysis/SKILL.md](../../data-analysis/SKILL.md)). **Usa questi
+pattern solo se i constraint dichiarati (query "Constraint"/"Relazioni
+foreign key" in [discovery-queries.md](discovery-queries.md)) non bastano o
+non esistono** — il caso comune su un Lakehouse, le cui tabelle
+auto-generate da Delta tipicamente non hanno PK/FK dichiarate.
+
+### Cardinalità (chiave candidata)
+
+Confronta con il conteggio righe della tabella (step 5 di
+[consumption.md](consumption.md)): cardinalità ≈ righe indica una chiave.
 
 ```text
-execute_query(workspaceId, itemId, "
-SET NOCOUNT ON;
-SELECT * FROM dbo.FactSales
-WHERE SaleDate BETWEEN '2025-01-01' AND '2025-06-30'
-ORDER BY SaleDate
-")
+execute_query(workspaceId, itemId, "SELECT COUNT(DISTINCT ProductID) AS distinct_count FROM dbo.FactSales")
 ```
 
-## Export e Paginazione su Risultati Grandi
+### Valori Distinti o Top-N per Frequenza
 
-Il tool `execute_query` restituisce i risultati come CSV nativo, ma tronca a
-~10.000 righe (vedi [SKILL.md](../SKILL.md) per il limite osservato):
+Per colonne a bassa cardinalità, elenca i valori effettivi. Per colonne ad
+alta cardinalità, limita a una Top-N per frequenza invece di elencare tutto:
 
 ```text
-# Step 1: verifica il conteggio totale nell'intervallo
-execute_query(workspaceId, itemId, "
-SELECT COUNT(*) AS total_rows
-FROM dbo.FactSales
-WHERE SaleDate BETWEEN '2025-01-01' AND '2025-06-30'
-")
+# Bassa cardinalità: valori distinti
+execute_query(workspaceId, itemId, "SELECT DISTINCT Region FROM dbo.DimCustomer ORDER BY Region")
 
-# Step 2: pagina se serve (OFFSET/FETCH). Elenca solo le colonne
-# necessarie e ordina per una chiave univoca, così la paginazione resta
-# stabile tra chiamate.
+# Alta cardinalità: Top-N per frequenza
+execute_query(workspaceId, itemId, "SELECT TOP 20 CustomerName, COUNT(*) AS freq FROM dbo.FactSales GROUP BY CustomerName ORDER BY freq DESC")
+```
+
+### Range Temporale/Numerico
+
+```text
+execute_query(workspaceId, itemId, "SELECT MIN(SaleDate) AS min_date, MAX(SaleDate) AS max_date, MIN(Amount) AS min_amount, MAX(Amount) AS max_amount FROM dbo.FactSales")
+```
+
+### Relazione Candidata (Inclusione Insiemistica)
+
+Conferma una relazione dedotta per naming — non basarsi solo sulla
+somiglianza dei nomi di colonna: verifica che i valori della colonna
+"child" esistano tutti nella colonna candidata "parent" (nessuna riga in
+risposta = inclusione confermata).
+
+```text
 execute_query(workspaceId, itemId, "
-SET NOCOUNT ON;
-SELECT SaleID, ProductID, SaleDate, Amount
-FROM dbo.FactSales
-WHERE SaleDate BETWEEN '2025-01-01' AND '2025-06-30'
-ORDER BY SaleID
-OFFSET 0 ROWS FETCH NEXT 10000 ROWS ONLY
+SELECT DISTINCT f.ProductID
+FROM dbo.FactSales AS f
+LEFT JOIN dbo.DimProduct AS p ON f.ProductID = p.ProductID
+WHERE p.ProductID IS NULL
 ")
 ```
 

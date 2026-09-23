@@ -1,7 +1,3 @@
-<!-- Estratto e adattato da microsoft/skills-for-fabric common/COMMON-CLI.md
-     § "Finding Workspaces and Items in Fabric" — solo la parte necessaria per
-     risolvere workspaceId/itemId prima di chiamare execute_query. -->
-
 # Trovare Workspace e Item in Fabric
 
 Prima di chiamare `execute_query` servono il GUID del workspace e il GUID

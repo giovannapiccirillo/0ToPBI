@@ -14,7 +14,8 @@ TEMPLATE = ROOT / ".github/skills/data-analysis/assets/data-analysis-template.md
 
 TABLE_HEADING_RE = re.compile(r"^### (.+)$", re.MULTILINE)
 REQUIRED_TABLE_FIELDS = [
-    "Righe:", "Colonne:", "Chiave candidata:", "Qualità dati:",
+    "Righe:", "Colonne:", "Chiave candidata:", "Relazioni candidate:",
+    "Cardinalità e valori:", "Range:", "Qualità dati:",
     "Anomalie di dominio:", "Metadati:",
 ]
 

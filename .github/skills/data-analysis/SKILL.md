@@ -62,11 +62,36 @@ Lakehouse se non pertinenti):
 
 1. **Schema**: colonne, tipi dato osservati (non solo dichiarati — es. una
    colonna "decimale" con valori scritti come testo va segnalata come
-   mismatch), chiave primaria candidata.
-2. **Conteggio righe**: numero esatto (locale: `len(df)`; Fabric: da
+   mismatch).
+2. **Chiave candidata e relazioni tra tabelle**: **prima leggi i metadati
+   dichiarati** — constraint PK/FK/UNIQUE, se esposti (Fabric: query
+   "Constraint"/"Relazioni foreign key" in
+   `fabric-lakehouse-consumption/references/discovery-queries.md`). Solo se
+   assenti — il caso comune su un Lakehouse, le cui tabelle sono
+   auto-generate da Delta e **tipicamente non hanno PK/FK dichiarate**, Delta
+   non avendo vincoli di integrità referenziale nativi — deduci dai valori:
+   - *Chiave candidata*: confronta `COUNT(DISTINCT colonna)` con il
+     conteggio righe della tabella; cardinalità ≈ righe indica una chiave.
+   - *Relazione candidata*: per una colonna che sembra riferirsi a un'altra
+     tabella per naming (es. `ProductID` in una fact), verifica che i suoi
+     valori esistano tutti nella presunta tabella "parent" (query di
+     inclusione insiemistica) prima di segnalarla — mai solo per
+     somiglianza del nome di colonna.
+3. **Cardinalità e valori per le altre colonne**: per ogni colonna
+   non-chiave, `COUNT(DISTINCT colonna)`. Se la cardinalità è bassa (soglia
+   indicativa, es. ≤ 20 valori distinti — valuta caso per caso) elenca i
+   valori distinti effettivi; se è alta, riporta il conteggio più una Top-N
+   per frequenza. Questo distingue una dimensione categorica (bassa
+   cardinalità, valori noti, utile come filtro/slicer nel report) da un
+   attributo libero (alta cardinalità, non utile a un modello a stella).
+4. **Range temporale/numerico**: per colonne data e per le misure numeriche
+   principali, MIN/MAX osservati — indica il periodo storico coperto
+   (quanti mesi/anni di dati per i KPI) e aiuta a intercettare outlier
+   prima del check di qualità dati.
+5. **Conteggio righe**: numero esatto (locale: `len(df)`; Fabric: da
    `sys.partitions`, mai `COUNT(*)` su tabelle grandi — vedi
    `fabric-lakehouse-consumption`).
-3. **Qualità dati**: valori nulli/mancanti per colonna, duplicati su chiave
+6. **Qualità dati**: valori nulli/mancanti per colonna, duplicati su chiave
    candidata, formati non uniformi (date, decimali, encoding), outlier/valori
    fuori range evidenti. Ogni anomalia va **descritta**, non corretta: è
    materiale per `etl-resolver`.
@@ -74,7 +99,7 @@ Lakehouse se non pertinenti):
    (es. una colonna "Data Ordine" con valori non plausibili come date) NON sono di competenza di `etl-resolver`.
    Queste vanno segnalate come "Anomalie di dominio" e richiedono conferma esplicita dell'utente 
    prima di qualunque decisione (es. escludere le righe, correggere manualmente, chiedere al proprietario dei dati).
-4. **Metadati**: origine del file/tabella, data ultima modifica (locale) o
+7. **Metadati**: origine del file/tabella, data ultima modifica (locale) o
    ultimo refresh noto (Fabric, se disponibile), eventuali note di
    provenienza utili al modello (es. "estrazione mensile", "tabella
    transazionale vs dimensionale").
@@ -96,6 +121,9 @@ Struttura obbligatoria del template — vedi
 - Righe: <numero>
 - Colonne: <elenco con tipo osservato>
 - Chiave candidata: <colonna/e o "nessuna evidente">
+- Relazioni candidate: <colonna → tabella.colonna referenziata, con fonte (constraint dichiarato o dedotta per inclusione valori) o "nessuna">
+- Cardinalità e valori: <per colonna non-chiave: conteggio distinct, e valori effettivi (bassa cardinalità) o Top-N (alta cardinalità)>
+- Range: <MIN/MAX per colonne data e misure numeriche principali, o "non pertinente">
 - Qualità dati: <elenco puntuale di anomalie o "nessuna anomalia rilevata">
 - Anomalie di dominio: <elenco puntuale o "nessuna">
 - Metadati: <provenienza, data/refresh, note>

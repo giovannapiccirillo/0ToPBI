@@ -1,13 +1,16 @@
 ---
 name: fabric-lakehouse-consumption
 description: >-
-  Esplorazione read-only di un Lakehouse Fabric (o Warehouse/Mirrored DB)
-  via il suo SQL analytics endpoint: schema discovery, conteggio righe,
-  metadati, qualità dei dati. Usata dall'agente data-analyst (fase 2) come
-  alternativa a input/<NomeProgetto>/ quando i requisiti indicano una
-  sorgente Fabric Lakehouse. Nessuna scrittura: solo query T-SQL SELECT e
-  catalogo. Triggers: "dati su Fabric", "Lakehouse", "schema tabelle Fabric",
-  "quante righe ha la tabella", "esplora il Lakehouse".
+  Probe read-only di un Lakehouse Fabric (o Warehouse/Mirrored DB) via il
+  suo SQL analytics endpoint per la costruzione di un modello semantico
+  Power BI e dei relativi KPI: schema, conteggio righe, chiave candidata,
+  relazioni tra tabelle, cardinalità/valori distinti, range
+  temporale/numerico, qualità dei dati. Usata dall'agente data-analyst
+  (fase 2) come alternativa a input/<NomeProgetto>/ quando i requisiti
+  indicano una sorgente Fabric Lakehouse. Solo esplorazione — non estrazione
+  di dataset per uso applicativo: nessuna scrittura, solo query T-SQL SELECT
+  e catalogo. Triggers: "dati su Fabric", "Lakehouse", "schema tabelle
+  Fabric", "quante righe ha la tabella", "esplora il Lakehouse".
 ---
 
 # fabric-lakehouse-consumption — Esplorazione Read-Only di un Lakehouse Fabric
@@ -26,6 +29,14 @@ su Fabric.
 `sys.*`). Nessun `CREATE`/`ALTER`/`DROP`/`INSERT`/`UPDATE`/`DELETE`/`MERGE`.
 Se serve scrivere su Fabric, è fuori scope di questo progetto: fermati e
 segnalalo all'utente invece di improvvisare con altri strumenti.
+
+**Finalità del probe** — l'obiettivo finale è la reportistica Power BI:
+ogni query serve a raccogliere ciò che `semantic-modeler` (fase 4) userà per
+decidere tabelle/relazioni/misure e costruire i KPI dei requisiti (schema,
+chiave candidata, relazioni tra tabelle, cardinalità/valori, range,
+qualità dati) — non a estrarre un dataset per un uso applicativo a valle.
+Query con filtri di business su un intervallo specifico o l'estrazione
+riga per riga di un dataset intero sono fuori scope qui.
 
 ## Tool Stack
 
@@ -97,17 +108,19 @@ Lakehouse che ha già indicato.
 
 Segui [references/consumption.md](references/consumption.md) per la
 sequenza completa e autorevole (connessione → schema discovery → sample →
-conteggi). Quel file è l'unico punto in cui questa sequenza è scritta per
-esteso — non ripeterla altrove.
+conteggi → constraint → probe di modellazione). Quel file è l'unico punto
+in cui questa sequenza è scritta per esteso — non ripeterla altrove.
 
 Per approfondire, in ordine di quando servono:
 
-- Query estese di schema (constraint, foreign key, viste, statistiche):
+- Query estese di schema (constraint PK/FK/UNIQUE, viste, statistiche) —
+  **controllare sempre prima di dedurre relazioni dai valori**:
   [references/discovery-queries.md](references/discovery-queries.md).
 - Superficie T-SQL supportata, tipi dato mappati da Delta e gotcha:
   [references/consumption-core.md](references/consumption-core.md).
-- Pattern pronti per compiti ricorrenti (export, paginazione oltre il cap
-  righe, multi-statement batch):
+- Pattern pronti per il probe di modellazione (cardinalità, valori
+  distinti/Top-N, range, relazioni candidate per inclusione insiemistica) e
+  per compiti ricorrenti (multi-statement batch):
   [references/query-patterns.md](references/query-patterns.md).
 - Risoluzione `workspaceId`/`itemId` da nome:
   [references/finding-workspaces-items.md](references/finding-workspaces-items.md).

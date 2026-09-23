@@ -1,5 +1,3 @@
-<!-- Adattato da microsoft/skills-for-fabric skills/sqldw-cli/references/consumption.md (solo modalità consumption). -->
-
 > **Regole critiche**
 > 1. Read-only: solo `SELECT` e query di catalogo — mai `CREATE`, `ALTER`,
 >    `DROP`, `INSERT`, `UPDATE`, `DELETE`, `MERGE`, `TRUNCATE`, `COPY INTO`.
@@ -53,6 +51,12 @@ execute_query(workspaceId, itemId, "SELECT s.name AS [schema], t.name AS [table]
 
 # 6. Oggetti di programmabilità (viste, funzioni, procedure)
 execute_query(workspaceId, itemId, "SELECT name, type_desc FROM sys.objects WHERE type IN ('V','FN','IF','P','TF') ORDER BY type_desc, name")
+
+# 7. Constraint dichiarati (PK, FK, UNIQUE) — vedi discovery-queries.md.
+# Su un Lakehouse tipicamente vuoto (tabelle auto-generate da Delta, senza
+# vincoli di integrità referenziale): solo in quel caso passa al fallback
+# per deduzione (query-patterns.md — cardinalità, distinct, inclusione
+# insiemistica) invece di assumere che non ci siano relazioni.
 ```
 
 ## Workflow
@@ -64,7 +68,12 @@ execute_query(workspaceId, itemId, "SELECT name, type_desc FROM sys.objects WHER
    tipi dato, gotcha).
 4. **Esegui** → chiama `execute_query(workspaceId, itemId, query)`.
 5. **Itera** → affina in base ai risultati.
-6. **Presenta** → riporta i risultati nell'artefatto di analisi
+6. **Approfondisci per il modello semantico** → chiave candidata,
+   relazioni, cardinalità/valori, range temporale/numerico — vedi
+   [query-patterns.md](query-patterns.md) (sezione "Pattern per Probe di
+   Modellazione"): prima i constraint dichiarati (step 7 sopra), poi la
+   deduzione via valori solo se assenti.
+7. **Presenta** → riporta i risultati nell'artefatto di analisi
    (`output/<NomeProgetto>/data-analysis.md`).
 
 ## Limiti e Regole

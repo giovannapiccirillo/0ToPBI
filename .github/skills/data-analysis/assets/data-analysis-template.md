@@ -9,6 +9,9 @@
 - Righe:
 - Colonne:
 - Chiave candidata:
+- Relazioni candidate:
+- Cardinalità e valori:
+- Range:
 - Qualità dati:
 - Anomalie di dominio:
 - Metadati:

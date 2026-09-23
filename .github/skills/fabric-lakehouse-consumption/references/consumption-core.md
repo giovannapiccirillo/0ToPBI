@@ -1,13 +1,3 @@
-<!-- Estratto mirato da microsoft/skills-for-fabric common/SQLDW-CONSUMPTION-CORE.md
-     — non un mirror completo (vedi SKILL.md). Rimosse le sezioni Security
-     (RLS/CLS/DDM/GRANT), Performance/Clustering/Statistics, Monitoring/DMV/
-     Query Insights e REST API refresh metadata: riguardano ruoli
-     (amministratore accesso, tuning carichi ricorrenti, DBA/owner
-     workspace, gestione ingestion) che data-analyst non interpreta mai —
-     è un consumer read-only one-shot. Mantenuti: superficie T-SQL, tipi
-     dato/mapping Delta, temp table, cross-database query, system catalog,
-     gotcha pertinenti a query read-only. -->
-
 # SQLDW-CONSUMPTION-CORE.md
 
 > **Scope**: Read-only / consumption-oriented T-SQL patterns for **Lakehouse SQL analytics endpoints**, **Mirrored Database SQL analytics endpoints**, and **Fabric Data Warehouse (DW)**.
