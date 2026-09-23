@@ -57,9 +57,16 @@ execute_query(workspaceId, itemId, query)
   `sqlcmd`).
 
 **Limiti osservati** (default non garantiti, verifica sul comportamento
-live): max ~10.000 righe per risposta, timeout 300s, 20 richieste/min per
-identità. Usa sempre `TOP`/`WHERE`/`COUNT(*)` prima di un `SELECT` non
-filtrato — vedi [references/consumption-core.md](references/consumption-core.md).
+live):
+
+| Limite | Valore | Note |
+|---|---|---|
+| Righe massime | ~10.000 | Risultati troncati oltre. Usa `TOP`, filtri o aggregazioni — vedi [references/query-patterns.md](references/query-patterns.md) per la paginazione. |
+| Timeout query | 300s | Query lunghe falliscono per timeout. |
+| Rate limit | 20 richieste/min per identità | HTTP 429 se superato. Consolida o spazia le chiamate. |
+
+Questa è l'unica tabella dei limiti in questa skill: le references sotto la
+citano per link, non la ripetono.
 
 ## Autenticazione — Verifica Sessione az
 
@@ -89,24 +96,21 @@ Lakehouse che ha già indicato.
 ## Workflow di Esplorazione
 
 Segui [references/consumption.md](references/consumption.md) per la
-sequenza completa (schema discovery → sample righe → conteggi → query
-mirate). In sintesi:
+sequenza completa e autorevole (connessione → schema discovery → sample →
+conteggi). Quel file è l'unico punto in cui questa sequenza è scritta per
+esteso — non ripeterla altrove.
 
-1. **Schema discovery**: schemi, tabelle, colonne e tipi (vedi
-   [references/discovery-queries.md](references/discovery-queries.md) per
-   query estese: constraint, foreign key, viste, statistiche).
-2. **Conteggio righe** per tabella (`sys.partitions`, non `COUNT(*)` su
-   tabelle grandi — più veloce e non richiede scan).
-3. **Sample righe** (`SELECT TOP N`) per capire formati e valori reali.
-4. **Query di qualità dati mirate** (valori nulli, duplicati su chiave
-   candidata, range/outlier) costruite ad hoc sullo schema appena scoperto —
-   vedi [references/consumption-core.md](references/consumption-core.md)
-   per la superficie T-SQL supportata e i tipi dato mappati da Delta.
+Per approfondire, in ordine di quando servono:
 
-Per template di workflow pronti (export CSV, discovery completa, paginazione
-su tabelle grandi) vedi
-[references/script-templates.md](references/script-templates.md) e
-[references/consumption-cli-quickref.md](references/consumption-cli-quickref.md).
+- Query estese di schema (constraint, foreign key, viste, statistiche):
+  [references/discovery-queries.md](references/discovery-queries.md).
+- Superficie T-SQL supportata, tipi dato mappati da Delta e gotcha:
+  [references/consumption-core.md](references/consumption-core.md).
+- Pattern pronti per compiti ricorrenti (export, paginazione oltre il cap
+  righe, multi-statement batch):
+  [references/query-patterns.md](references/query-patterns.md).
+- Risoluzione `workspaceId`/`itemId` da nome:
+  [references/finding-workspaces-items.md](references/finding-workspaces-items.md).
 
 ## Obbligatorio/Preferire/Evitare
 

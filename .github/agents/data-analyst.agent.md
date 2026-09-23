@@ -69,38 +69,26 @@ decidere modello).
 Leggi `output/<NomeProgetto>/requirements.md`, in particolare la sezione
 `## Dati Disponibili e Granularità` (campi `Tipo di DB` / `Modalità di
 connessione`) e la sezione `## Mapping Requisiti → Schema Target` se
-presente, per determinare: quali tabelle sono rilevanti e se la sorgente è
-locale o Fabric. Se la sorgente non è chiara, fermati e chiedi conferma
-puntuale invece di indovinare.
+presente, per determinare quali tabelle sono rilevanti e se la sorgente è
+locale o Fabric — criteri di scelta ed eventuali criteri di stop in
+`data-analysis/SKILL.md` (sezione "Sorgente Dati: Locale vs Fabric").
 
-**Sorgente locale**: per ogni file/foglio rilevante in
-`input/<NomeProgetto>/`, convertilo prima se binario
-(`python scripts/common/convert_input.py <NomeProgetto>`, mai script di conversione
-ad hoc), poi ispeziona colonne, tipi osservati, righe, nulli/duplicati/
-formati non uniformi rispetto allo schema atteso nei requisiti.
+**Sorgente locale**: converti prima i file binari
+(`python scripts/common/convert_input.py <NomeProgetto>`, mai script di
+conversione ad hoc), poi ispeziona ogni file/foglio rilevante.
 
-**Sorgente Fabric**: segui `fabric-lakehouse-consumption/SKILL.md` — risolvi
-`workspaceId`/`itemId` da nome (mai GUID inventati), poi usa `execute_query`
-per schema discovery, conteggio righe via `sys.partitions` e query di qualità
-dati mirate (nulli, duplicati su chiave candidata, outlier). Rispetta i
-limiti di query della skill (rate limit, `TOP`/`WHERE` sempre su tabelle di
-cardinalità sconosciuta).
+**Sorgente Fabric**: segui `fabric-lakehouse-consumption/SKILL.md` per
+intero (risoluzione workspace/item, `execute_query`, limiti di query).
 
-Per ogni tabella, distingui sempre **problemi di formato** (correggibili
-deterministicamente da `etl-resolver`: date, decimali, encoding, duplicati
-su chiave) da **anomalie di dominio** (valori sintatticamente validi ma
-sospetti nel merito, es. una data fuori da qualunque intervallo plausibile):
-le seconde vanno segnalate e richiedono conferma esplicita dell'utente,
-non decise da questo agente né passate a `etl-resolver` come se fossero
-correzioni automatiche.
+Applica alle tabelle ispezionate i criteri di contenuto e la distinzione
+formato/dominio definiti in `data-analysis/SKILL.md` (sezioni "Contenuto
+Obbligatorio del Report" e "Quando Fermarsi e Chiedere") — non ripetuti qui.
 
 Scrivi `output/<NomeProgetto>/data-analysis.md` copiando con copia binaria
 (`Copy-Item`/`cp`) il template
 `.github/skills/data-analysis/assets/data-analysis-template.md` e compilando
-solo il testo sotto le intestazioni — una sottosezione `### <Nome
-tabella/file>` per ogni tabella analizzata, e la sezione finale `## Sintesi
-per Fase Successiva` con le correzioni da proporre a `etl-resolver` e i punti
-di attenzione per `semantic-modeler`.
+solo il testo sotto le intestazioni, secondo la struttura definita nella
+skill.
 
 Prima di mostrare il report o chiedere approvazione, esegui via `execute` il
 gate deterministico `python scripts/02_analisi_dati/validate_data_analysis.py <NomeProgetto>`:

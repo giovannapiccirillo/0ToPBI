@@ -67,48 +67,16 @@ execute_query(workspaceId, itemId, "SELECT name, type_desc FROM sys.objects WHER
 6. **Presenta** → riporta i risultati nell'artefatto di analisi
    (`output/<NomeProgetto>/data-analysis.md`).
 
-## Limiti osservati (non un contratto documentato)
+## Limiti e Regole
 
-| Limite | Valore | Note |
-|---|---|---|
-| Righe massime | ~10.000 | Risultati troncati oltre. Usa `TOP`, filtri o aggregazioni. |
-| Timeout query | 300s | Query lunghe falliscono per timeout. |
-| Rate limit | 20 richieste/min per identità | HTTP 429 se superato. Ritenta con backoff. |
+Per limiti osservati (righe/timeout/rate limit) e le regole
+OBBLIGATORIO/PREFERIRE/EVITARE, vedi [SKILL.md](../SKILL.md) — sono
+mantenute lì come unica fonte, non ripetute qui. Due regole specifiche a
+questa sequenza, non generiche alla skill:
 
-Verifica il comportamento reale da risposte live (troncamento, 429, timeout)
-piuttosto che affidarti a questi numeri come garanzia.
-
-## Regole
-
-### OBBLIGATORIO
-
-- Verificare che il tool MCP `execute_query` sia disponibile prima della
-  prima operazione — se assente, chiedere all'utente di registrare l'MCP
-  `fabric-sqlendpoint` (vedi `.mcp.json` del progetto).
-- Usare sempre `TOP`/`WHERE` — il tool tronca a ~10.000 righe: se ne
-  restituisce esattamente 10.000, i risultati sono probabilmente troncati.
-- Usare `COUNT(*)` (o meglio `sys.partitions`) prima di un `SELECT` senza
-  filtri su una tabella grande.
 - `SET NOCOUNT ON;` a inizio di query multi-statement.
-- Inviare un solo batch T-SQL per chiamata: niente `GO`, niente comandi
-  sqlcmd. Per operazioni multi-batch, usa chiamate `execute_query` separate.
-
-### EVITARE
-
-- `SELECT *` non filtrato: rischia il cap di 10.000 righe.
-- Query ravvicinate oltre il rate limit (20/min): spazia le chiamate o
-  consolida con JOIN/UNION ALL.
-- MARS (Multiple Active Result Sets): non supportato, ogni query è
-  indipendente.
-- GUID hardcoded: risolvi sempre workspace/item da nome.
-
-### PREFERIRE
-
-- `TOP N` sulle query esplorative.
-- Consolidare query correlate in un'unica `SELECT` con JOIN.
-- Query aggregate (`COUNT`, `SUM`, `AVG`, `GROUP BY`) rispetto a scan
-  completi.
-- `ORDER BY` con `TOP` per risultati deterministici.
+- MARS (Multiple Active Result Sets) non è supportato: ogni `execute_query`
+  è indipendente, niente stato condiviso tra chiamate.
 
 ## Troubleshooting
 

@@ -41,8 +41,10 @@ La sezione `## Dati Disponibili e Granularità` di
   (Lakehouse/Warehouse/Mirrored DB), usa la skill
   `.github/skills/fabric-lakehouse-consumption/SKILL.md` (MCP
   `fabric-sqlendpoint`, tool `execute_query`) per schema discovery, conteggio
-  righe e query di qualità dati. Non scaricare né duplicare i dati Fabric in
-  `input/`: l'analisi lavora query per query contro l'endpoint.
+  righe, query di qualità dati e i limiti di query (righe/timeout/rate
+  limit, sezione "Tool Stack" della skill). Non scaricare né duplicare i
+  dati Fabric in `input/`: l'analisi lavora query per query contro
+  l'endpoint.
 
 Se i requisiti non chiariscono la sorgente, è un gap bloccante: fermati e
 chiedi conferma prima di procedere (non indovinare tra locale e Fabric).
