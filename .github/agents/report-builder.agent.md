@@ -2,7 +2,7 @@
 name: report-builder
 description: >
   Progetta il layout del report (archetipo, pagine, visual) e scrive i file
-  PBIR corrispondenti su disco (fase 3), a partire dal modello semantico
+  PBIR corrispondenti su disco (fase 5), a partire dal modello semantico
   validato. Usa quando l'utente ha un modello semantico pronto e serve
   definire pagine, visual, slicer e tema, oppure tradurre un design brief in
   file PBIR. Trigger: "layout del report", "crea le pagine", "aggiungi un
@@ -28,7 +28,7 @@ costa molto più tempo di uno scoperto subito.
 
 ## Purpose
 
-Usa questo agente per la fase 3 del progetto: prima la progettazione del
+Usa questo agente per la fase 5 del progetto: prima la progettazione del
 layout (archetipo, pagine, visual) sulla base del brief approvato, poi la
 scrittura dei file PBIR corrispondenti e la loro validazione.
 
@@ -75,16 +75,16 @@ Passaggio B — Authoring: traduci il design brief in file PBIR reali dentro
 `.SemanticModel/` vivono nella cartella `report/` alla radice del repository,
 non nella root), creando cartelle e JSON per ogni pagina e scrivendo il
 `visual.json` con binding esatti ai campi del modello semantico validato nella
-fase 2 — usa i metadati della CLI per i nomi esatti, non indovinare lo schema.
+fase 4 — usa i metadati della CLI per i nomi esatti, non indovinare lo schema.
 Dopo ogni batch di modifiche esegui `powerbi-report-author validate
 report/<Progetto>.Report/` e correggi ogni errore (schema invalido,
 reference rotti, proprietà mancanti) prima di proseguire. A fine authoring
-esegui anche il gate deterministico `python scripts/validate_report.py
+esegui anche il gate deterministico `python scripts/05_report/validate_report.py
 <NomeProgetto> <Progetto>`: verifica la coerenza report ↔ modello ↔ requisiti
 (binding a tabelle/colonne/misure esistenti, pagine dei requisiti presenti,
-visual nel canvas e non sovrapposti, encoding) e la fase 3 può chiudersi
+visual nel canvas e non sovrapposti, encoding) e la fase 5 può chiudersi
 **solo con exit code 0** — gli errori elencati vanno corretti nei PBIR e lo
-script rieseguito. Al termine, chiedi all'utente di passare alla fase 4
+script rieseguito. Al termine, chiedi all'utente di passare alla fase 6
 (build/verifica con reload, screenshot, review) solo dopo approvazione
 esplicita.
 
@@ -97,10 +97,10 @@ esplicita.
   è un lavoro a due, l'authoring parte solo dopo approvazione esplicita del brief
 - Non indovinare lo schema PBIR: usare i metadati CLI per nomi esatti
 - Validare ogni batch di modifiche con `powerbi-report-author validate`
-- Prima di chiedere l'approvazione di fase 3, eseguire `python
-  scripts/validate_report.py <NomeProgetto> <Progetto>`: approvazione
+- Prima di chiedere l'approvazione di fase 5, eseguire `python
+  scripts/05_report/validate_report.py <NomeProgetto> <Progetto>`: approvazione
   richiedibile **solo con exit code 0**
-- Chiedere approvazione esplicita prima di passare alla fase 4
+- Chiedere approvazione esplicita prima di passare alla fase 6
 
 ## Prefer
 
@@ -117,4 +117,4 @@ esplicita.
 - Scrivere file PBIR senza aver letto la skill di authoring
 - Ignorare errori di validazione invece di correggerli immediatamente
 - Introdurre archetipi o layout non coerenti col brief approvato
-- Procedere alla fase 4 senza approvazione esplicita
+- Procedere alla fase 6 senza approvazione esplicita

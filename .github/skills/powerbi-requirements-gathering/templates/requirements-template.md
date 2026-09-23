@@ -18,7 +18,7 @@
 
 ## Mapping Requisiti → Schema Target
 
-{da compilare ogni volta che è disponibile un documento/testo di requisiti; una riga per requisito atomico. Tabella.Colonna riportata solo se dichiarata esplicitamente nei requisiti stessi; ogni altro requisito → "Da confermare in fase 1.5" (lo schema reale lo esplora data-analyst, mai ispezionato qui). "Non applicabile" solo se non c'è alcun documento/testo di requisiti}
+{da compilare ogni volta che è disponibile un documento/testo di requisiti; una riga per requisito atomico. Tabella.Colonna riportata solo se dichiarata esplicitamente nei requisiti stessi; ogni altro requisito → "Da confermare in fase 2" (lo schema reale lo esplora data-analyst, mai ispezionato qui). "Non applicabile" solo se non c'è alcun documento/testo di requisiti}
 
 | Requisito atomico | Tabella.Colonna proposta | Allineato? | Note |
 |---|---|---|---|
@@ -28,8 +28,10 @@
 {una riga per gap bloccante emerso; se non ce ne sono, scrivere "Non applicabile: nessun gap emerso", non lasciare un trattino vuoto}
 
 ## KPI e Metriche Chiave
-- KPI: {una riga per KPI — "<nome KPI> — misura esistente: <nome>" oppure "<nome KPI> — serve nuova misura"}
-- Calcoli mancanti segnalati per la fase 2: {misura/colonna calcolata necessaria e perché, o "Non applicabile: nessun calcolo mancante"}
+- {una riga per KPI, ciascuno marcato come misura esistente o da costruire — formati ammessi:}
+  - {"<nome KPI> — misura esistente: <nome misura>"}
+  - {"<nome KPI> — serve nuova misura: <base di calcolo>"}
+- Calcoli mancanti segnalati per la fase 4: {misura/colonna calcolata necessaria e perché, o "Non applicabile: nessun calcolo mancante"}
 
 ## Numero Pagine, Visual Desiderati e Layout
 1. {Nome pagina} — scopo: {a cosa serve questa pagina}

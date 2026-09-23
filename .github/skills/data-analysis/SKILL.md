@@ -1,7 +1,7 @@
 ---
 name: data-analysis
 description: >-
-  Analisi dati (fase 1.5) tra requisiti approvati e modello semantico: schema,
+  Analisi dati (fase 2) tra requisiti approvati e modello semantico: schema,
   qualità dati, conteggio righe, metadati — sia da file locali in
   input/<NomeProgetto>/ sia da un Lakehouse Fabric. Produce
   output/<NomeProgetto>/data-analysis.md, la base da cui etl-resolver decide
@@ -12,9 +12,9 @@ description: >-
 # data-analysis — Analisi Dati tra Requisiti e Modello
 
 Questa skill definisce il contenuto obbligatorio e il formato di
-`output/<NomeProgetto>/data-analysis.md`, l'output della fase 1.5 (Analisi
+`output/<NomeProgetto>/data-analysis.md`, l'output della fase 2 (Analisi
 Dati). Si applica **sempre**, qualunque sia la sorgente dati (file locali o
-Lakehouse Fabric): la fase di pulizia (`etl-resolver`, fase 1.6) legge questo
+Lakehouse Fabric): la fase di pulizia (`etl-resolver`, fase 3) legge questo
 report per sapere cosa correggere, invece di ri-ispezionare i dati grezzi da
 zero.
 
@@ -36,7 +36,7 @@ La sezione `## Dati Disponibili e Granularità` di
 - **Locale**: file in `input/<NomeProgetto>/` (`.csv`, `.xlsx`, eventualmente
   convertiti da `.docx` non è pertinente qui — solo i file tabellari). Usa i
   tool di lettura file standard del progetto (`read`,
-  `python scripts/convert_input.py <NomeProgetto>` per i binari).
+  `python scripts/common/convert_input.py <NomeProgetto>` per i binari).
 - **Fabric Lakehouse**: quando i requisiti indicano una sorgente Fabric
   (Lakehouse/Warehouse/Mirrored DB), usa la skill
   `.github/skills/fabric-lakehouse-consumption/SKILL.md` (MCP

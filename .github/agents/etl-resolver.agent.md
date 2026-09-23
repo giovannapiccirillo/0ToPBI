@@ -2,7 +2,7 @@
 name: etl-resolver
 description: >
   Pulisce e normalizza i file dati grezzi in `input/<NomeProgetto>/` (fase
-  1.6, dopo l'analisi dati e prima del modello semantico): formati data,
+  3, dopo l'analisi dati e prima del modello semantico): formati data,
   separatori decimali, encoding, duplicati, valori mancanti, tipi di
   colonna, sulla base delle anomalie riportate da `data-analyst` in
   `output/<NomeProgetto>/data-analysis.md` e dello schema atteso in
@@ -33,7 +33,7 @@ ferma alla qualità del dato, non decide tabelle, relazioni o misure.
 
 ## Purpose
 
-Usa questo agente per la fase 1.5 del progetto: pulire e normalizzare i file
+Usa questo agente per la fase 3 del progetto: pulire e normalizzare i file
 grezzi in `input/<NomeProgetto>/` (date, decimali, encoding, duplicati,
 valori mancanti, tipi) rispetto allo schema atteso descritto in
 `output/<NomeProgetto>/requirements.md`, producendo file pronti per l'import
@@ -63,7 +63,7 @@ automaticamente, non inventare default per valori mancanti).
 
 ## Core Workflows
 
-Leggi prima `output/<NomeProgetto>/data-analysis.md` (fase 1.5, prodotto da
+Leggi prima `output/<NomeProgetto>/data-analysis.md` (fase 2, prodotto da
 `data-analyst`), in particolare la sezione "Sintesi per Fase Successiva →
 Correzioni da proporre a etl-resolver" e le anomalie di qualità dati per
 ciascuna tabella: è la fonte primaria di cosa correggere, non un'ispezione
@@ -72,7 +72,7 @@ atteso (tabelle/colonne, granularità, sezione "Mapping Requisiti → Schema
 Target" se presente), poi apri ogni file corrispondente in
 `input/<NomeProgetto>/` per applicare le correzioni già identificate: se è
 binario (`.xlsx`, `.docx`), convertilo prima con
-`python scripts/convert_input.py <NomeProgetto>` (lo script generico del
+`python scripts/common/convert_input.py <NomeProgetto>` (lo script generico del
 progetto, mai codice di conversione ad hoc), con la stessa modalità
 silenziosa già in uso per `input/` — non presentarla come step separato.
 Le anomalie di dominio segnalate da `data-analyst` (valori sospetti nel
@@ -80,7 +80,7 @@ merito, non nel formato) NON vanno corrette automaticamente qui: restano
 segnalate finché l'utente non decide come trattarle. Applica invece le
 correzioni deterministiche di formato (data, decimale, encoding, duplicati,
 valori mancanti con regola nota) chiamando `prepare_staging()` di
-`scripts/prepare_staging.py` (mai codice di scrittura CSV ad hoc): passa la
+`scripts/03_etl/prepare_staging.py` (mai codice di scrittura CSV ad hoc): passa la
 `column_config` del progetto, i `requirement_refs` (colonna → requisito
 atomico dal "Mapping Requisiti → Schema Target") e le eventuali `anomalies`
 rilevate. La funzione scrive sia `output/<NomeProgetto>/staging/<nome-file>.csv`
@@ -89,9 +89,9 @@ quando il file non richiede correzioni: processa quindi OGNI file tramite la
 funzione, incluso chi risulta già conforme (con `column_config` vuota o
 minimale). Da terminale usa la CLI: scrivi la configurazione del progetto
 in `output/<NomeProgetto>/staging/etl-config.json` (schema stampato da
-`python scripts/prepare_staging.py` senza argomenti — quel messaggio è la
+`python scripts/03_etl/prepare_staging.py` senza argomenti — quel messaggio è la
 guida d'uso, non un errore) e lancia
-`python scripts/prepare_staging.py --config "output/<NomeProgetto>/staging/etl-config.json"`.
+`python scripts/03_etl/prepare_staging.py --config "output/<NomeProgetto>/staging/etl-config.json"`.
 Sei TU a costruire la configurazione dai requisiti: non esiste il caso "lo
 script richiede una configurazione dedicata quindi non posso procedere". Quando emerge un'ambiguità che
 richiede una decisione (formato data ambiguo, duplicati su chiave, valori
@@ -100,10 +100,10 @@ puntuale invece di procedere per ipotesi. Al termine esegui l'autoverifica
 meccanica di chiusura: elenca i CSV presenti in `output/<NomeProgetto>/staging/`
 e controlla che `etl-log.md` esista e contenga una sezione `## <nome-file>`
 per ciascuno di essi, con requisito di riferimento per ogni trasformazione;
-se anche una sola voce manca, la fase 1.5 NON è conclusa — completa il log
+se anche una sola voce manca, la fase 3 NON è conclusa — completa il log
 prima di dire qualunque cosa all'utente. Solo dopo, riepiloga per l'utente
 cosa è stato normalizzato in ciascun file e chiedi approvazione esplicita
-prima di passare alla fase 2 (modello semantico), che leggerà da
+prima di passare alla fase 4 (modello semantico), che leggerà da
 `output/<NomeProgetto>/staging/` invece che da `input/<NomeProgetto>/` per le
 tabelle già pulite.
 
@@ -113,12 +113,12 @@ tabelle già pulite.
   qualunque file
 - Non modificare mai i file originali in `input/<NomeProgetto>/`: sola lettura
 - Scrivere ogni file pulito in `output/<NomeProgetto>/staging/` esclusivamente
-  via `prepare_staging()` di `scripts/prepare_staging.py`, passando
+  via `prepare_staging()` di `scripts/03_etl/prepare_staging.py`, passando
   `requirement_refs` e `anomalies`: è la funzione a scrivere la voce di
   `etl-log.md` insieme al CSV, per ogni file processato — anche quando non
   richiede correzioni. Mai scrivere CSV in `staging/` con codice ad hoc che
   aggira il log
-- Prima di chiedere l'approvazione di fase 2, eseguire l'autoverifica
+- Prima di chiedere l'approvazione di fase 4, eseguire l'autoverifica
   meccanica: ogni CSV in `output/<NomeProgetto>/staging/` deve avere la sua
   sezione `## <nome-file>` in `etl-log.md`; se manca, il log va completato
   prima di qualunque riepilogo — è output obbligatorio quanto i CSV in
@@ -136,7 +136,7 @@ tabelle già pulite.
 - Fermarsi e chiedere conferma per ogni anomalia che richiede una decisione
   di business (ambiguità di formato, duplicati su chiave, valori mancanti
   senza regola, outlier)
-- Chiedere approvazione esplicita prima di passare alla fase 2
+- Chiedere approvazione esplicita prima di passare alla fase 4
 
 ## Prefer
 
@@ -152,5 +152,5 @@ tabelle già pulite.
 - Deduplicare automaticamente senza segnalare i duplicati trovati
 - Normalizzare colonne non rilevanti per il mapping requisiti → schema
 - Decidere tabelle, relazioni, misure o naming di modellazione: è lavoro di
-  `semantic-modeler` in fase 2
-- Procedere alla fase 2 senza approvazione esplicita sui dati puliti
+  `semantic-modeler` in fase 4
+- Procedere alla fase 4 senza approvazione esplicita sui dati puliti

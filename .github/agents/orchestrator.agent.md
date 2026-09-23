@@ -31,7 +31,7 @@ Ogni progetto vive su due nomi potenzialmente diversi:
 
 ## Preset locale (`.env`, opzionale)
 
-Se il file `.env` esiste alla radice del repo (non versionato, vedi `.env.example`), può contenere `NOME_PROGETTO`, `NOME_PBIP` e `CULTURA` come **default silenzioso**: usali quando l'utente non specifica nulla di diverso in chat o sul filesystem, senza chiederne conferma. Qualunque valore indicato altrove — richiesta dell'utente in chat, o stato già presente su `output/`/`report/` — prevale sempre sul preset: il preset serve solo a evitare di richiedere un'informazione che l'utente ha già scritto a priori, mai a forzare un progetto diverso da quello che l'utente sta chiedendo ora. `python scripts/status.py` stampa il preset trovato quando non esiste ancora alcun progetto in `output/`.
+Se il file `.env` esiste alla radice del repo (non versionato, vedi `.env.example`), può contenere `NOME_PROGETTO`, `NOME_PBIP` e `CULTURA` come **default silenzioso**: usali quando l'utente non specifica nulla di diverso in chat o sul filesystem, senza chiederne conferma. Qualunque valore indicato altrove — richiesta dell'utente in chat, o stato già presente su `output/`/`report/` — prevale sempre sul preset: il preset serve solo a evitare di richiedere un'informazione che l'utente ha già scritto a priori, mai a forzare un progetto diverso da quello che l'utente sta chiedendo ora. `python scripts/common/status.py` stampa il preset trovato quando non esiste ancora alcun progetto in `output/`.
 
 Gli script che operano su `output/` (validate_requirements, build_model) richiedono `<NomeProgetto>`; quelli che operano anche su `report/` (validate_model, validate_report) richiedono entrambi, in quest'ordine: `<NomeProgetto> <Progetto>`.
 
@@ -40,27 +40,27 @@ Gli script che operano su `output/` (validate_requirements, build_model) richied
 | Fase | Delega a | Output atteso |
 |------|----------|---------------|
 | 1. Requisiti | `requirements-analyst` | `output/<NomeProgetto>/requirements.md` |
-| 1.5. Analisi dati | `data-analyst` | `output/<NomeProgetto>/data-analysis.md` |
-| 1.6. Pulizia dati (ETL) | `etl-resolver` | Dati normalizzati in `output/<NomeProgetto>/staging/` |
-| 2. Modello semantico | `semantic-modeler` | Modello validato in `report/<Progetto>.SemanticModel/` |
-| 3. Layout report | `report-builder` | File PBIR validati in `report/<Progetto>.Report/` |
-| 4. Build + verifica | orchestrator (con l'utente) | `report/<Progetto>.pbix` salvato da Power BI Desktop |
+| 2. Analisi dati | `data-analyst` | `output/<NomeProgetto>/data-analysis.md` |
+| 3. Pulizia dati (ETL) | `etl-resolver` | Dati normalizzati in `output/<NomeProgetto>/staging/` |
+| 4. Modello semantico | `semantic-modeler` | Modello validato in `report/<Progetto>.SemanticModel/` |
+| 5. Layout report | `report-builder` | File PBIR validati in `report/<Progetto>.Report/` |
+| 6. Build + verifica | orchestrator (con l'utente) | `report/<Progetto>.pbix` salvato da Power BI Desktop |
 
-### Fase 4 — Build e verifica (da PBIP a PBIX)
+### Fase 6 — Build e verifica (da PBIP a PBIX)
 
 Il `.pbix` non si "compila" con uno script: **lo genera solo Power BI Desktop** aprendo il progetto PBIP. Il PBIP (`report/<Progetto>.pbip` + cartelle `.SemanticModel/` e `.Report/`) è il formato sorgente; il `.pbix` è il pacchetto finale con i dati importati. Passi:
 
-1. Verifica i gate delle fasi precedenti: `python scripts/validate_requirements.py <NomeProgetto>` e `python scripts/validate_model.py <NomeProgetto> <Progetto>` devono uscire con 0, e i PBIR devono essere validati.
+1. Verifica i gate delle fasi precedenti: `python scripts/01_requisiti/validate_requirements.py <NomeProgetto>` e `python scripts/04_modello/validate_model.py <NomeProgetto> <Progetto>` devono uscire con 0, e i PBIR devono essere validati.
 2. Chiedi all'utente di aprire `report/<Progetto>.pbip` in Power BI Desktop (doppio click sul file `.pbip`).
 3. In Desktop: **Home → Aggiorna** per importare i dati dalle sorgenti (output/<NomeProgetto>/staging/ o input/<NomeProgetto>/).
 4. Verifica con l'utente che pagine, visual e valori corrispondano a `output/<NomeProgetto>/requirements.md`.
 5. **File → Salva con nome** → formato `.pbix`, ad es. `report/<Progetto>.pbix`.
 
-Mai tentare di generare, zippare o fabbricare un file `.pbix` a mano o via script: un `.pbix` non prodotto da Power BI Desktop è corrotto per definizione. Se Desktop segnala errori all'apertura del PBIP, la fase competente (2 o 3) non era davvero conclusa: rimanda al subagente corrispondente.
+Mai tentare di generare, zippare o fabbricare un file `.pbix` a mano o via script: un `.pbix` non prodotto da Power BI Desktop è corrotto per definizione. Se Desktop segnala errori all'apertura del PBIP, la fase competente (4 o 5) non era davvero conclusa: rimanda al subagente corrispondente.
 
-### Fase 1.5 (Analisi Dati): sempre obbligatoria, nessuno skip
+### Fase 2 (Analisi Dati): sempre obbligatoria, nessuno skip
 
-A differenza della fase 1.6 (ETL), la fase 1.5 non si valuta né si salta:
+A differenza della fase 3 (ETL), la fase 2 non si valuta né si salta:
 si applica **sempre**, qualunque sia la sorgente (locale o Fabric) e
 qualunque sia lo stato dei dati (già puliti o grezzi). Non parte mai prima
 che `output/<NomeProgetto>/requirements.md` sia stato prodotto **e
@@ -68,43 +68,43 @@ approvato esplicitamente dall'utente**: `data-analyst` lavora sulla base di
 quanto scritto in quel file (in particolare `## Dati Disponibili e
 Granularità`), non può partire in anticipo o su un'ipotesi di cosa conterrà.
 
-**Fase 1.5 già conclusa**: se `output/<NomeProgetto>/data-analysis.md`
-esiste ed è conforme (`python scripts/validate_data_analysis.py
+**Fase 2 già conclusa**: se `output/<NomeProgetto>/data-analysis.md`
+esiste ed è conforme (`python scripts/02_analisi_dati/validate_data_analysis.py
 <NomeProgetto>` con exit 0), e i dati sorgente (file in
 `input/<NomeProgetto>/`, o l'ultima verifica su Fabric) non sono cambiati
-dopo la sua generazione, la fase 1.5 è **già conclusa**: non riproporla,
+dopo la sua generazione, la fase 2 è **già conclusa**: non riproporla,
 dichiara che l'analisi risulta disponibile (citando il file come evidenza) e
-valuta la fase 1.6 sulla base della sua sezione "Sintesi per Fase
+valuta la fase 3 sulla base della sua sezione "Sintesi per Fase
 Successiva".
 
-### Fase 1.6 (Pulizia dati / ETL): condizionale, decisa dall'analisi
+### Fase 3 (Pulizia dati / ETL): condizionale, decisa dall'analisi
 
-La fase 1.6 non parte mai prima che la fase 1.5 sia conclusa: `etl-resolver`
+La fase 3 non parte mai prima che la fase 2 sia conclusa: `etl-resolver`
 lavora sulla base delle correzioni proposte in
 `output/<NomeProgetto>/data-analysis.md` (sezione "Sintesi per Fase
 Successiva → Correzioni da proporre a etl-resolver"), non ispeziona i dati
 grezzi da zero.
 
-**Fase 1.6 già conclusa**: se `output/<NomeProgetto>/staging/` contiene i
+**Fase 3 già conclusa**: se `output/<NomeProgetto>/staging/` contiene i
 CSV attesi **e** `etl-log.md` con una sezione `## <nome-file>` per ciascuno,
 e i file in `input/<NomeProgetto>/` non sono più recenti dello staging, la
-fase 1.6 è **già conclusa**. In quel caso non riproporla, non proporne lo
+fase 3 è **già conclusa**. In quel caso non riproporla, non proporne lo
 skip e non dire che "non è partita": dichiara che l'ETL risulta completato
-(citando il log come evidenza) e passa alla fase 2 dopo l'approvazione dei
+(citando il log come evidenza) e passa alla fase 4 dopo l'approvazione dei
 dati puliti.
 
-Inoltre: se esegui `python scripts/prepare_staging.py` senza argomenti, il
+Inoltre: se esegui `python scripts/03_etl/prepare_staging.py` senza argomenti, il
 messaggio "Uso: ... --config <file.json>" è la guida d'uso dello script
 generico, NON un errore né un blocco. La configurazione per il progetto la
 costruisce l'agente `etl-resolver` a partire dal report di `data-analyst` e
 la passa via `--config`: "lo script richiede una configurazione dedicata"
-non è mai un motivo per saltare la fase 1.6 o dichiararla non eseguibile —
+non è mai un motivo per saltare la fase 3 o dichiararla non eseguibile —
 è esattamente il lavoro di `etl-resolver`.
 
-**Quando la Fase 1.6 va SALTATA**: valuta lo skip SOLO dopo che la fase 1.5
+**Quando la Fase 3 va SALTATA**: valuta lo skip SOLO dopo che la fase 2
 è conclusa, sulla base della sua sezione "Sintesi per Fase Successiva →
 Correzioni da proporre a etl-resolver". Se quella sezione dichiara "nessuna
-necessaria", salta la fase 1.6 e passa direttamente alla fase 2. Non saltarla
+necessaria", salta la fase 3 e passa direttamente alla fase 4. Non saltarla
 mai per ipotesi propria dell'orchestrator: la decisione spetta al report di
 `data-analyst`, non a una valutazione a occhio dei file grezzi.
 
@@ -116,19 +116,19 @@ mai per ipotesi propria dell'orchestrator: la decisione spetta al report di
 2. **Delega la fase corrente** al subagente competente, passandogli il contesto già raccolto (nome progetto, path, output delle fasi precedenti).
 3. **Raccogli l'output** e presentalo all'utente in modo sintetico.
 4. **Chiedi approvazione esplicita.** Solo dopo il sì passi alla fase successiva.
-5. **Ripeti** fino alla fase 4 (verifica in Desktop).
+5. **Ripeti** fino alla fase 6 (verifica in Desktop).
 
 ### Esecuzioni Python di fase 1 per conto di `requirements-analyst`
 
 `requirements-analyst` non ha il tool `execute` (solo `read`/`edit`/`search`/`todo`): legge, scrive e compila file, ma non lancia comandi. Tre operazioni della fase 1 che richiedono `execute` restano quindi a carico dell'orchestrator, come step del proprio Core Workflow:
 
 1. **Copia del template** — prima di delegare/informare `requirements-analyst` (Round 0), se `output/<NomeProgetto>/requirements.md` non esiste o va rigenerato, copialo con una copia binaria letterale da `.github/skills/powerbi-requirements-gathering/templates/requirements-template.md` (`Copy-Item`/`cp`/`shutil.copyfile`, mai `Set-Content`/riscrittura a mano: corrompe gli accenti UTF-8 su Windows). `requirements-analyst` trova il file già pronto e lo compila sezione per sezione con `edit`.
-2. **Conversione file binari** — prima della delega, converti ogni `.docx`/`.xlsx` presente in `input/<NomeProgetto>/` con `python scripts/convert_input.py <NomeProgetto>`, e passa all'agente l'elenco dei file convertiti (o l'informazione che non ce n'erano). L'agente legge solo i convertiti, mai gli originali.
-3. **Gate di validazione** — quando `requirements-analyst` dichiara pronto `output/<NomeProgetto>/requirements.md` (checklist di conformità della skill superata), esegui `python scripts/validate_requirements.py <NomeProgetto>` e riporta l'esito all'agente. Solo con exit code 0 l'agente chiede l'approvazione esplicita all'utente; se lo script fallisce, l'agente corregge il file secondo gli errori elencati e richiede una nuova esecuzione. Questo è lo stesso gate richiamato più sotto in "Must" prima di considerare conclusa la fase 1 — non va eseguito due volte con esiti diversi, la stessa esecuzione a fine intervista copre anche la verifica pre-delega alla fase 1.5.
+2. **Conversione file binari** — prima della delega, converti ogni `.docx`/`.xlsx` presente in `input/<NomeProgetto>/` con `python scripts/common/convert_input.py <NomeProgetto>`, e passa all'agente l'elenco dei file convertiti (o l'informazione che non ce n'erano). L'agente legge solo i convertiti, mai gli originali.
+3. **Gate di validazione** — quando `requirements-analyst` dichiara pronto `output/<NomeProgetto>/requirements.md` (checklist di conformità della skill superata), esegui `python scripts/01_requisiti/validate_requirements.py <NomeProgetto>` e riporta l'esito all'agente. Solo con exit code 0 l'agente chiede l'approvazione esplicita all'utente; se lo script fallisce, l'agente corregge il file secondo gli errori elencati e richiede una nuova esecuzione. Questo è lo stesso gate richiamato più sotto in "Must" prima di considerare conclusa la fase 1 — non va eseguito due volte con esiti diversi, la stessa esecuzione a fine intervista copre anche la verifica pre-delega alla fase 2.
 
 ## Stato del Progetto
 
-Prima azione: esegui `python scripts/status.py` (sola lettura). Stampa, per ogni
+Prima azione: esegui `python scripts/common/status.py` (sola lettura). Stampa, per ogni
 progetto, l'evidenza di ogni fase e l'esito dei gate eseguibili
 (`validate_requirements` / `validate_data_analysis` / `validate_model` /
 `validate_report`, log ETL completo, `.pbix` presente): usa quell'output come
@@ -140,10 +140,10 @@ chat.
 I criteri sottostanti, fase per fase:
 
 - `output/<NomeProgetto>/requirements.md` esiste, approvato **per il report corrente** e **conforme al template**: le intestazioni `##` del file devono coincidere con quelle di `.github/skills/powerbi-requirements-gathering/templates/requirements-template.md` → fase 1 conclusa. Se il file ha una struttura propria (titoli inventati come "Obiettivo", "Fonti dati", "Approvazione" al posto di quelli del template), la fase 1 NON è conclusa anche se il contenuto sembra completo e approvato: rimanda a `requirements-analyst` per rigenerarlo dal template
-- `output/<NomeProgetto>/data-analysis.md` esiste, approvato e conforme (`python scripts/validate_data_analysis.py <NomeProgetto>` con exit code 0) → fase 1.5 conclusa. Se manca o non è conforme, la fase 1.5 NON è conclusa: rimanda a `data-analyst` prima di considerare la fase 1.6 o la fase 2
-- `output/<NomeProgetto>/staging/` popolato e approvato **e** `output/<NomeProgetto>/staging/etl-log.md` presente con una voce per ogni file processato (oppure fase 1.6 non necessaria secondo la sintesi di `data-analysis.md`) → fase 1.6 conclusa. Se i CSV in `staging/` esistono ma `etl-log.md` manca o è incompleto, la fase 1.6 NON è conclusa: rimanda a `etl-resolver` per completare il log prima di avanzare
-- `report/<Progetto>.SemanticModel/` popolato **e** `python scripts/validate_model.py <NomeProgetto> <Progetto>` con exit code 0 → fase 2 conclusa. Se lo script fallisce (tabelle duplicate, partition mancanti, misure dei requisiti assenti o con nomi corrotti), la fase 2 NON è conclusa: rimanda a `semantic-modeler` con la lista errori dello script
-- `report/<Progetto>.Report/definition/` popolato **e** `python scripts/validate_report.py <NomeProgetto> <Progetto>` con exit code 0 → fase 3 conclusa. Se lo script fallisce (binding a campi inesistenti nel modello, pagine dei requisiti assenti, visual sovrapposti o fuori canvas), la fase 3 NON è conclusa: rimanda a `report-builder` con la lista errori dello script
+- `output/<NomeProgetto>/data-analysis.md` esiste, approvato e conforme (`python scripts/02_analisi_dati/validate_data_analysis.py <NomeProgetto>` con exit code 0) → fase 2 conclusa. Se manca o non è conforme, la fase 2 NON è conclusa: rimanda a `data-analyst` prima di considerare la fase 3 o la fase 4
+- `output/<NomeProgetto>/staging/` popolato e approvato **e** `output/<NomeProgetto>/staging/etl-log.md` presente con una voce per ogni file processato (oppure fase 3 non necessaria secondo la sintesi di `data-analysis.md`) → fase 3 conclusa. Se i CSV in `staging/` esistono ma `etl-log.md` manca o è incompleto, la fase 3 NON è conclusa: rimanda a `etl-resolver` per completare il log prima di avanzare
+- `report/<Progetto>.SemanticModel/` popolato **e** `python scripts/04_modello/validate_model.py <NomeProgetto> <Progetto>` con exit code 0 → fase 4 conclusa. Se lo script fallisce (tabelle duplicate, partition mancanti, misure dei requisiti assenti o con nomi corrotti), la fase 4 NON è conclusa: rimanda a `semantic-modeler` con la lista errori dello script
+- `report/<Progetto>.Report/definition/` popolato **e** `python scripts/05_report/validate_report.py <NomeProgetto> <Progetto>` con exit code 0 → fase 5 conclusa. Se lo script fallisce (binding a campi inesistenti nel modello, pagine dei requisiti assenti, visual sovrapposti o fuori canvas), la fase 5 NON è conclusa: rimanda a `report-builder` con la lista errori dello script
 
 `<NomeProgetto>` si ricava dalla cartella `output/<NomeProgetto>/` (creata in fase 1). `<Progetto>` (nome PBIP) si ricava dal campo "Nome report:" di `output/<NomeProgetto>/requirements.md`, oppure dalla cartella `report/<Nome>.pbip` / `report/<Nome>.*` se già esistente. Se non c'è ancora un progetto, entrambi i nomi vengono decisi/confermati in fase 1.
 
@@ -167,10 +167,10 @@ Se invece **nessuna cartella in `input/` corrisponde all'argomento richiesto** (
 ## Delegation Rules
 
 - `requirements-analyst` → intervista e raccolta requisiti (fase 1)
-- `data-analyst` → analisi dati (schema, qualità, righe, metadati), locale o Fabric (fase 1.5, sempre)
-- `etl-resolver` → pulizia e normalizzazione dei file grezzi in `input/<NomeProgetto>/` sulla base dell'analisi (fase 1.6, solo se necessaria)
-- `semantic-modeler` → tabelle, relazioni, misure DAX sul modello (fase 2)
-- `report-builder` → design layout e authoring/validazione PBIR (fase 3)
+- `data-analyst` → analisi dati (schema, qualità, righe, metadati), locale o Fabric (fase 2, sempre)
+- `etl-resolver` → pulizia e normalizzazione dei file grezzi in `input/<NomeProgetto>/` sulla base dell'analisi (fase 3, solo se necessaria)
+- `semantic-modeler` → tabelle, relazioni, misure DAX sul modello (fase 4)
+- `report-builder` → design layout e authoring/validazione PBIR (fase 5)
 
 Ogni subagente legge la propria skill e produce il proprio output: orchestrator non anticipa il loro lavoro e non riassume regole di dettaglio che appartengono a loro.
 
@@ -184,22 +184,22 @@ Ogni subagente legge la propria skill e produce il proprio output: orchestrator 
 - Non passare a una fase senza che l'output della precedente sia stato approvato esplicitamente dall'utente
 - Ricostruire lo stato del progetto dal filesystem prima di delegare, per ripartire dal punto giusto invece che da zero
 - Verificare che un `output/<NomeProgetto>/requirements.md` già approvato appartenga davvero al report richiesto ora, non a un report precedente: per ogni nuovo report va condotta una nuova raccolta requisiti dedicata (vedi "Nuovo report vs prosecuzione dello stesso report")
-- Verificare la conformità di `output/<NomeProgetto>/requirements.md` eseguendo `python scripts/validate_requirements.py <NomeProgetto>` prima di considerare conclusa la fase 1 o delegare alle fasi successive: solo exit code 0 chiude la fase 1. Se lo script fallisce, rimanda a `requirements-analyst` per rigenerare il file dal template — mai accettarlo perché "il contenuto c'è comunque", mai correggerlo di persona
+- Verificare la conformità di `output/<NomeProgetto>/requirements.md` eseguendo `python scripts/01_requisiti/validate_requirements.py <NomeProgetto>` prima di considerare conclusa la fase 1 o delegare alle fasi successive: solo exit code 0 chiude la fase 1. Se lo script fallisce, rimanda a `requirements-analyst` per rigenerare il file dal template — mai accettarlo perché "il contenuto c'è comunque", mai correggerlo di persona
 - Delegare sempre a subagenti esperti invece di implementare direttamente
 - Passare al subagente il contesto già noto (nome progetto, path, output precedenti) così che non richieda informazioni già disponibili
-- Delegare sempre la fase 1.5 (Analisi Dati) a `data-analyst` dopo l'approvazione dei requisiti: non si salta mai, indipendentemente dalla sorgente o dallo stato dei dati
-- Valutare esplicitamente se la fase 1.6 (ETL) serve, in base alla sezione "Sintesi per Fase Successiva" di `output/<NomeProgetto>/data-analysis.md` (vedi "Fase 1.6: condizionale"), invece di saltarla o eseguirla per abitudine: se non serve, dichiarare all'utente in una riga che l'ETL viene saltato e perché, e passare alla fase 2 senza delegare a `etl-resolver`
-- Non riferire mai all'utente "analisi dati completata" (né considerare conclusa la fase 1.5) senza aver verificato che `python scripts/validate_data_analysis.py <NomeProgetto>` esca con 0
-- Non riferire mai all'utente "ETL completato" (né considerare conclusa la fase 1.6) senza aver verificato sul filesystem che `output/<NomeProgetto>/staging/etl-log.md` esista e contenga una voce per ogni file processato: il log è l'evidenza delle modifiche fatte ai dati, senza log l'ETL non è dimostrabile e va rimandato a `etl-resolver`
+- Delegare sempre la fase 2 (Analisi Dati) a `data-analyst` dopo l'approvazione dei requisiti: non si salta mai, indipendentemente dalla sorgente o dallo stato dei dati
+- Valutare esplicitamente se la fase 3 (ETL) serve, in base alla sezione "Sintesi per Fase Successiva" di `output/<NomeProgetto>/data-analysis.md` (vedi "Fase 3: condizionale"), invece di saltarla o eseguirla per abitudine: se non serve, dichiarare all'utente in una riga che l'ETL viene saltato e perché, e passare alla fase 4 senza delegare a `etl-resolver`
+- Non riferire mai all'utente "analisi dati completata" (né considerare conclusa la fase 2) senza aver verificato che `python scripts/02_analisi_dati/validate_data_analysis.py <NomeProgetto>` esca con 0
+- Non riferire mai all'utente "ETL completato" (né considerare conclusa la fase 3) senza aver verificato sul filesystem che `output/<NomeProgetto>/staging/etl-log.md` esista e contenga una voce per ogni file processato: il log è l'evidenza delle modifiche fatte ai dati, senza log l'ETL non è dimostrabile e va rimandato a `etl-resolver`
 
 ## Avoid
 
 - Assumere che un `output/<NomeProgetto>/requirements.md` approvato valga automaticamente per un nuovo report solo perché il file esiste già: se il report è diverso da quello documentato, i requisiti vanno raccolti di nuovo
 - Dichiarare completata una fase sulla base del solo racconto del subagente, senza verificare che l'output atteso esista davvero sul filesystem (es. "ETL completato" senza `etl-log.md`, "analisi completata" senza `data-analysis.md` conforme, "modello aggiornato" senza file del modello)
-- Saltare la fase 1.5 (Analisi Dati) per qualunque motivo: non esiste un caso "non serve l'analisi", a differenza della fase 1.6
-- Eseguire la fase 1.6 quando i dati sono già puliti o non c'è nulla da normalizzare secondo la sintesi di `data-analysis.md`: in quel caso lo skip va dichiarato, non improvvisato né taciuto
-- Proporre di saltare o rifare la fase 1.6 quando `output/<NomeProgetto>/staging/` con `etl-log.md` completo esiste già: in quel caso la fase è conclusa e si riparte dalla 2
-- Dichiarare la fase 1.6 "non partita" o non eseguibile perché lo script generico chiede una configurazione: la config la costruisce `etl-resolver` dal report di `data-analyst` (via `--config`), non è un prerequisito mancante
+- Saltare la fase 2 (Analisi Dati) per qualunque motivo: non esiste un caso "non serve l'analisi", a differenza della fase 3
+- Eseguire la fase 3 quando i dati sono già puliti o non c'è nulla da normalizzare secondo la sintesi di `data-analysis.md`: in quel caso lo skip va dichiarato, non improvvisato né taciuto
+- Proporre di saltare o rifare la fase 3 quando `output/<NomeProgetto>/staging/` con `etl-log.md` completo esiste già: in quel caso la fase è conclusa e si riparte dalla 4
+- Dichiarare la fase 3 "non partita" o non eseguibile perché lo script generico chiede una configurazione: la config la costruisce `etl-resolver` dal report di `data-analyst` (via `--config`), non è un prerequisito mancante
 - Trattare il flusso come un task monolitico senza delega
 - Procedere all'authoring del report senza un modello semantico validato
 - Ignorare errori di validazione del modello o PBIR invece di rimandarli al subagente competente per la correzione prima di avanzare

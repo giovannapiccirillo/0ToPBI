@@ -3,7 +3,7 @@ name: fabric-lakehouse-consumption
 description: >-
   Esplorazione read-only di un Lakehouse Fabric (o Warehouse/Mirrored DB)
   via il suo SQL analytics endpoint: schema discovery, conteggio righe,
-  metadati, qualità dei dati. Usata dall'agente data-analyst (fase 1.5) come
+  metadati, qualità dei dati. Usata dall'agente data-analyst (fase 2) come
   alternativa a input/<NomeProgetto>/ quando i requisiti indicano una
   sorgente Fabric Lakehouse. Nessuna scrittura: solo query T-SQL SELECT e
   catalogo. Triggers: "dati su Fabric", "Lakehouse", "schema tabelle Fabric",
@@ -33,13 +33,13 @@ segnalalo all'utente invece di improvvisare con altri strumenti.
 |---|---|
 | MCP `fabric-sqlendpoint` (`execute_query`) | **Primario**: esegue T-SQL contro l'endpoint SQL Fabric. Configurato in `.mcp.json` di questo repo. Autenticazione trasparente via `az login` (nessun token/secret da gestire a mano). |
 | `az rest` | Solo per risolvere `workspaceId`/`itemId` da nome (discovery control-plane), non per eseguire query dati |
-| `scripts/ensure_fabric_login.py` | Verifica/stabilisce la sessione `az login` (vedi sezione "Autenticazione" sotto) prima di usare gli altri due |
+| `scripts/common/ensure_fabric_login.py` | Verifica/stabilisce la sessione `az login` (vedi sezione "Autenticazione" sotto) prima di usare gli altri due |
 
 > **Se il tool MCP `execute_query` non è disponibile** nella tua sessione:
 > fermati e segnala all'utente di verificare che l'MCP `fabric-sqlendpoint`
 > sia configurato in `.mcp.json`. Se invece il problema è di autenticazione
 > (query che falliscono con errore 401/403), esegui prima
-> `scripts/ensure_fabric_login.py` invece di segnalare subito: potrebbe
+> `scripts/common/ensure_fabric_login.py` invece di segnalare subito: potrebbe
 > bastare un nuovo login. Non ripiegare comunque su `sqlcmd` o altri
 > strumenti ad hoc.
 
@@ -66,7 +66,7 @@ filtrato — vedi [references/consumption-core.md](references/consumption-core.m
 Prima di qualunque chiamata `az rest` o `execute_query`, esegui via `execute`:
 
 ```text
-python scripts/ensure_fabric_login.py
+python scripts/common/ensure_fabric_login.py
 ```
 
 Controlla se esiste già una sessione `az login` valida (`az account show`).

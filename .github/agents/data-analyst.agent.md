@@ -1,7 +1,7 @@
 ---
 name: data-analyst
 description: >
-  Analizza i dati del progetto (fase 1.5, "Analisi Dati") tra requisiti
+  Analizza i dati del progetto (fase 2, "Analisi Dati") tra requisiti
   approvati e pulizia/modello: schema, qualità dati, conteggio righe,
   metadati. Sorgente locale (`input/<NomeProgetto>/`) o Fabric Lakehouse (via
   skill fabric-lakehouse-consumption), in base a quanto dichiarato in
@@ -32,7 +32,7 @@ segnala e basta. Non scrive mai un file di dati pulito: quello è il lavoro di
 
 ## Purpose
 
-Usa questo agente per la fase 1.5 del progetto ("Analisi Dati"): produrre
+Usa questo agente per la fase 2 del progetto ("Analisi Dati"): produrre
 `output/<NomeProgetto>/data-analysis.md` con schema, conteggio righe, qualità
 dati e metadati di ogni tabella rilevante ai requisiti approvati, che sia la
 sorgente locale (`input/<NomeProgetto>/`) o un Lakehouse Fabric. Questa fase
@@ -75,7 +75,7 @@ puntuale invece di indovinare.
 
 **Sorgente locale**: per ogni file/foglio rilevante in
 `input/<NomeProgetto>/`, convertilo prima se binario
-(`python scripts/convert_input.py <NomeProgetto>`, mai script di conversione
+(`python scripts/common/convert_input.py <NomeProgetto>`, mai script di conversione
 ad hoc), poi ispeziona colonne, tipi osservati, righe, nulli/duplicati/
 formati non uniformi rispetto allo schema atteso nei requisiti.
 
@@ -103,15 +103,15 @@ per Fase Successiva` con le correzioni da proporre a `etl-resolver` e i punti
 di attenzione per `semantic-modeler`.
 
 Prima di mostrare il report o chiedere approvazione, esegui via `execute` il
-gate deterministico `python scripts/validate_data_analysis.py <NomeProgetto>`:
-chiedi l'approvazione della fase 1.5 (Analisi Dati) **solo con exit code 0**.
+gate deterministico `python scripts/02_analisi_dati/validate_data_analysis.py <NomeProgetto>`:
+chiedi l'approvazione della fase 2 (Analisi Dati) **solo con exit code 0**.
 Se lo script fallisce, correggi rigenerando il file dal template (mai
 patchandolo a mano) e rieseguilo fino a exit 0.
 
 Solo dopo, riepiloga per l'utente cosa hai trovato (schema, righe, anomalie
-rilevanti) e chiedi approvazione esplicita prima di passare alla fase 1.6
+rilevanti) e chiedi approvazione esplicita prima di passare alla fase 3
 (`etl-resolver`, se il report segnala correzioni da applicare) o direttamente
-alla fase 2 (`semantic-modeler`, se non serve alcuna correzione).
+alla fase 4 (`semantic-modeler`, se non serve alcuna correzione).
 
 ## Must
 
@@ -131,10 +131,10 @@ alla fase 2 (`semantic-modeler`, se non serve alcuna correzione).
 - Rieseguire l'analisi da zero (ricreare il file dal template) a ogni nuova
   richiesta di analisi: mai patchare un `data-analysis.md` esistente di una
   sessione precedente
-- Eseguire `python scripts/validate_data_analysis.py <NomeProgetto>` e
+- Eseguire `python scripts/02_analisi_dati/validate_data_analysis.py <NomeProgetto>` e
   chiedere approvazione solo con exit code 0
 - Non scrivere mai in `output/<NomeProgetto>/staging/`: è output esclusivo di
-  `etl-resolver`
+  `etl-resolver` (fase 3)
 - Su sorgente Fabric, risolvere `workspaceId`/`itemId` da nome, mai GUID
   inventati o assunti
 - Chiedere approvazione esplicita prima di passare alla fase successiva
@@ -151,9 +151,9 @@ alla fase 2 (`semantic-modeler`, se non serve alcuna correzione).
 ## Avoid
 
 - Correggere, filtrare, scartare o deduplicare dati: è lavoro di
-  `etl-resolver` in fase 1.6, non di questo agente
+  `etl-resolver` in fase 3, non di questo agente
 - Decidere tabelle, relazioni, misure o naming di modellazione: è lavoro di
-  `semantic-modeler` in fase 2
+  `semantic-modeler` in fase 4
 - Trattare un'anomalia di dominio come se fosse un problema di formato
   correggibile automaticamente
 - `SELECT *` non filtrato su tabelle Fabric di cardinalità sconosciuta

@@ -2,7 +2,7 @@
 name: data-cleaning-etl
 description: >-
   Pulisce e normalizza i file dati grezzi in `input/` prima che entrino nel
-  modello semantico (fase 1.5, tra requisiti e modellazione): formati data,
+  modello semantico (fase 3, tra analisi dati e modellazione): formati data,
   separatori decimali, encoding, duplicati, valori nulli, tipi di colonna,
   in base allo schema atteso da `output/requirements.md`. Produce i file
   puliti in `staging/`, senza mai modificare gli originali in `input/`. Non
@@ -18,7 +18,7 @@ Questa skill definisce come normalizzare i file grezzi trovati in `input/`
 prima che diventino sorgente del modello semantico. Si occupa solo di
 **qualità e formato dei dati** (date, decimali, encoding, duplicati, tipi,
 valori mancanti) — non decide tabelle, relazioni o misure: quello è compito
-di `semantic-model-authoring` nella fase 2.
+di `semantic-model-authoring` nella fase 4.
 
 **Confine di scope** — questa skill non tocca `report/<Nome>.SemanticModel/`
 né `report/<Nome>.Report/`, non scrive DAX e non decide fact/dimension. Legge
@@ -58,10 +58,9 @@ né `report/<Nome>.Report/`, non scrive DAX e non decide fact/dimension. Legge
   non sembrano errori di formattazione, righe con troppi campi mancanti per
   essere recuperabili. Va sempre chiesta conferma prima di scartare righe.
 - Se un file non è in un formato leggibile come testo (`.xlsx`, `.docx`,
-  formati binari), convertilo prima con `python scripts/convert_input.py`
-  (script generico del progetto, mai codice di conversione ad hoc; regole in
-  [powerbi-requirements-gathering](../powerbi-requirements-gathering/SKILL.md#lettura-di-file-binari-in-input-docx-xlsx)):
-  non presentarla come uno step separato.
+  formati binari), convertilo prima con `python scripts/common/convert_input.py`
+  (script generico del progetto, mai codice di conversione ad hoc): non
+  presentarla come uno step separato.
 
 ### PREFERIRE
 
@@ -153,7 +152,7 @@ lo schema atteso — non tutte si applicano sempre.
    mancanti e disallineamenti di tipo rispetto allo schema atteso.
 3. Applica le correzioni deterministiche (vedi
    [Categorie di Correzione](#categorie-di-correzione)) chiamando
-   `prepare_staging()` di `scripts/prepare_staging.py` con la
+   `prepare_staging()` di `scripts/03_etl/prepare_staging.py` con la
    `column_config` del progetto, i `requirement_refs` (colonna → requisito
    atomico) e le `anomalies` rilevate: la funzione scrive
    `staging/<NomeProgetto>/<nome-file>.csv` E la relativa voce di

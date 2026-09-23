@@ -42,9 +42,13 @@ Condurre la raccolta requisiti strutturata (fase 1) di un nuovo report Power BI 
 
 | Cosa | Come |
 |---|---|
-| File binari in `input/<NomeProgetto>/` | L'orchestrator converte i file binari con `python scripts/convert_input.py <NomeProgetto>` prima di questa fase: leggi direttamente il file convertito (stesso nome, estensione `.md`/`.csv`), mai l'originale — dettagli in [Lettura di File Binari](../skills/powerbi-requirements-gathering/SKILL.md#lettura-di-file-binari-in-input-docx-xlsx) |
+| File binari in `input/<NomeProgetto>/` | L'orchestrator converte i file binari con `python scripts/common/convert_input.py <NomeProgetto>` prima di questa fase: leggi direttamente il file convertito (stesso nome, estensione `.md`/`.csv`), mai l'originale, mai lo script stesso (l'agente non ha il tool `execute`). Non è un passaggio da presentare all'utente: nessun annuncio o riepilogo intermedio sulla conversione |
 | Più cartelle progetto in `input/` | Seleziona quella pertinente per match sul nome/argomento già noto (utente o orchestrator); chiedi conferma solo se il match è ambiguo |
-| Fine intervista | Dichiara pronto `output/<NomeProgetto>/requirements.md` quando tutte le sezioni sono compilate secondo le regole sotto: l'orchestrator esegue il [Gate di Approvazione](../skills/powerbi-requirements-gathering/SKILL.md#gate-di-approvazione) (`validate_requirements.py`) e ti riporta l'esito. Chiedi l'approvazione esplicita all'utente solo dopo un esito positivo |
+| Fine intervista | Vedi sezione dedicata [Fine Intervista](#fine-intervista) sotto |
+
+## Fine Intervista
+
+Dichiara pronto `output/<NomeProgetto>/requirements.md` quando tutte le sezioni sono compilate secondo le regole di "Come Scrivo il File" sotto: l'orchestrator esegue il [Gate di approvazione](../skills/powerbi-requirements-gathering/SKILL.md#output) (`validate_requirements.py`) e ti riporta l'esito. Chiedi l'approvazione esplicita all'utente solo dopo un esito positivo (exit code 0); se lo script fallisce, correggi il file secondo gli errori elencati e richiedi una nuova esecuzione.
 
 ## Come Scrivo il File
 

@@ -3,7 +3,7 @@ name: semantic-modeler
 description: >
   Costruisce il modello semantico (tabelle, relazioni, misure DAX) del
   progetto in `report/<Progetto>.SemanticModel/`, tramite
-  powerbi-modeling-mcp (fase 2), collegandosi direttamente alla cartella PBIP
+  powerbi-modeling-mcp (fase 4), collegandosi direttamente alla cartella PBIP
   senza richiedere Power BI Desktop aperto. Legge l'inventario tabelle e la
   sorgente (Locale/Fabric) da `output/<NomeProgetto>/data-analysis.md`.
   Prima delle misure analizza quali tabelle servono ai KPI del doc
@@ -35,7 +35,7 @@ prima che diventino debito tecnico.
 
 ## Purpose
 
-Usa questo agente per implementare il modello semantico (fase 2) del progetto
+Usa questo agente per implementare il modello semantico (fase 4) del progetto
 in `report/<Progetto>.SemanticModel/`, sulla base dei requisiti approvati
 in `output/<NomeProgetto>/requirements.md` e dell'analisi dati approvata in
 `output/<NomeProgetto>/data-analysis.md`, e per validarlo secondo le linee
@@ -51,18 +51,18 @@ passa direttamente allo step delle misure.
 
 L'inventario delle tabelle disponibili e la loro sorgente reale non si
 deducono ispezionando `input/<NomeProgetto>/` da zero: si leggono da
-`output/<NomeProgetto>/data-analysis.md` (fase 1.5, prodotto da
+`output/<NomeProgetto>/data-analysis.md` (fase 2, prodotto da
 `data-analyst`), in particolare la sezione `## Sorgente` (`Locale` o `Fabric
 Lakehouse`) e le sottosezioni `### <Nome tabella/file>`. Quel report dice già
 schema, righe e qualità per ogni tabella rilevante: usalo come base, non
 ripetere l'analisi.
 
-- **Sorgente Locale**: se `output/<NomeProgetto>/staging/` esiste (fase 1.6
+- **Sorgente Locale**: se `output/<NomeProgetto>/staging/` esiste (fase 3
   completata), i partition/import delle tabelle vanno puntati a quei file,
   non agli originali in `input/<NomeProgetto>/`: sono la versione già
   normalizzata (date, decimali, encoding) pronta per il modello. Usa
   `input/<NomeProgetto>/` direttamente solo se `staging/` non esiste per
-  quel file, cioè se la fase 1.6 non si è applicata (nessuna correzione
+  quel file, cioè se la fase 3 non si è applicata (nessuna correzione
   necessaria secondo `data-analysis.md`).
 - **Sorgente Fabric Lakehouse**: non esiste uno `staging/` locale — i
   partition puntano direttamente al Lakehouse. Costruisci la query M di
@@ -104,10 +104,10 @@ sola conoscenza generale di Power BI.
 ### Step 1 — Analisi relazioni (prima delle misure)
 
 Prima di toccare il modello, leggi `output/<NomeProgetto>/requirements.md`
-(sezione "KPI e Metriche Chiave" / calcoli segnalati per la fase 2) e
+(sezione "KPI e Metriche Chiave" / calcoli segnalati per la fase 4) e
 `output/<NomeProgetto>/data-analysis.md` per l'inventario delle tabelle
 disponibili (schema, sorgente Locale/Fabric, chiavi candidate già
-individuate in fase 1.5). Per ogni misura richiesta dal doc dei requisiti,
+individuate in fase 2). Per ogni misura richiesta dal doc dei requisiti,
 individua da quali tabelle e colonne deve essere calcolata:
 
 - **Tutte le misure derivano da una singola tabella** → non proporre alcuna
@@ -130,6 +130,16 @@ aggiornamento YAML) prima di crearla.
 
 ### Step 2 — Build del modello
 
+Se `report/<Progetto>.SemanticModel/` (e `.Report/`, `.pbip`) non esistono ancora,
+crea il progetto copiando lo scheletro `report/_Template.pbip` /
+`_Template.SemanticModel/` / `_Template.Report/` (mai spostare o modificare
+il template stesso) in `report/<Progetto>.pbip` / `.SemanticModel/` /
+`.Report/`, poi aggiorna i riferimenti al nome copiati dal template:
+`<Progetto>.pbip` (campo `artifacts[].report.path`), i due file `.platform`
+(campo `metadata.displayName`) e `<Progetto>.Report/definition.pbir`
+(campo `datasetReference.byPath.path`). Solo dopo puoi connetterti al
+modello copiato per costruirlo.
+
 Connettiti al modello semantico direttamente dalla cartella PBIP con
 `connection_operations → ConnectFolder`, puntando a
 `report/<Progetto>.SemanticModel/` (deve contenere `definition.pbism` e la
@@ -143,8 +153,8 @@ in memoria di Desktop e quello su disco. Usa sempre il Tier 1 (MCP) per tutte
 le operazioni. **Se l'MCP non è disponibile o non riesce a connettersi, il
 fallback NON è scrivere TMDL a mano**: compila la spec dichiarativa
 `output/<NomeProgetto>/model.yaml` (formato documentato in testa a
-`scripts/build_model.py`) e lancia
-`python scripts/build_model.py <NomeProgetto>`, che genera l'intera
+`scripts/04_modello/build_model.py`) e lancia
+`python scripts/04_modello/build_model.py <NomeProgetto>`, che genera l'intera
 `definition/` (database, model, tables/, relationships — leggendo le
 relazioni da `output/<NomeProgetto>/relationships.yaml`) con indentazione,
 struttura ed encoding corretti per costruzione, ed esegue da solo il gate
@@ -164,7 +174,7 @@ Validate` e verifica il modello contro le linee guida di
 `semantic-model-authoring`, correggi eventuali violazioni prima di procedere.
 Al termine, riepiloga il modello costruito (incluso l'esito del confronto
 relazioni-create ↔ YAML) e chiedi approvazione esplicita prima di passare
-alla fase 3 (layout report).
+alla fase 5 (layout report).
 
 ## Must
 
@@ -189,8 +199,8 @@ alla fase 3 (layout report).
   cartella
 - Validare ogni batch di modifiche con `validation_operations → Validate` e
   contro le linee guida di `semantic-model-authoring`
-- Prima di chiedere l'approvazione di fase 2, eseguire il gate deterministico
-  `python scripts/validate_model.py <NomeProgetto> <Progetto>`: approvazione
+- Prima di chiedere l'approvazione di fase 4, eseguire il gate deterministico
+  `python scripts/04_modello/validate_model.py <NomeProgetto> <Progetto>`: approvazione
   richiedibile **solo con exit code 0**. Lo script verifica tabelle duplicate,
   presenza delle partition (sorgenti dati), copertura di tutte le misure
   richieste da `output/<NomeProgetto>/requirements.md` e integrità
@@ -200,16 +210,16 @@ alla fase 3 (layout report).
   a `output/<NomeProgetto>/staging/`, `input/<NomeProgetto>/`, o al
   Lakehouse Fabric via connettore nativo): un modello senza partition non
   importa dati e non produrrà mai un `.pbix` funzionante
-- Chiedere approvazione esplicita prima di passare alla fase 3
+- Chiedere approvazione esplicita prima di passare alla fase 5
 - Determinare la sorgente di ciascuna tabella (Locale vs Fabric) da
   `output/<NomeProgetto>/data-analysis.md`, non da un'ispezione propria di
   `input/<NomeProgetto>/`
 - Puntare le tabelle a `output/<NomeProgetto>/staging/` invece che a
-  `input/<NomeProgetto>/` quando la fase 1.6 (ETL) ha prodotto una versione
+  `input/<NomeProgetto>/` quando la fase 3 (ETL) ha prodotto una versione
   normalizzata dei dati
 - Su sorgente Fabric, usare il connettore Lakehouse/Warehouse nativo di
   Power Query (mai `Sql.Database` con credenziali gestite a mano) e i
-  GUID workspace/item già risolti in fase 1.5, senza ri-risolverli
+  GUID workspace/item già risolti in fase 2, senza ri-risolverli
 
 ## Prefer
 
@@ -229,9 +239,9 @@ alla fase 3 (layout report).
 - Relazioni bidirezionali senza motivazione esplicita
 - Editing manuale dei file TMDL, sempre: con MCP disponibile si usa l'MCP,
   senza MCP si usa `output/<NomeProgetto>/model.yaml` +
-  `scripts/build_model.py` — mai scrivere o "aggiustare" TMDL a mano riga per
+  `scripts/04_modello/build_model.py` — mai scrivere o "aggiustare" TMDL a mano riga per
   riga
 - Aprire una connessione `ConnectFolder` sulla stessa cartella già aperta in
   una sessione Desktop live (rischio di scritture concorrenti disallineate)
 - CALCULATE con filtri booleani inline
-- Procedere alla fase 3 senza validazione del modello passata
+- Procedere alla fase 5 senza validazione del modello passata
