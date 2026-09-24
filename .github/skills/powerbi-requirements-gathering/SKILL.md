@@ -143,6 +143,8 @@ Obiettivo: identificare 3-6 KPI e metriche che il report deve mostrare in primo 
 
 Chiedi con una domanda diretta se non già deducibile dal contesto. Per ogni KPI raccolto, annota se corrisponde a una misura esistente o va costruito nella fase 4, scrivendo il risultato in `## KPI e Metriche Chiave` del template: **una riga per KPI**, mai un elenco schiacciato su una riga sola, nel formato esatto `- <Nome KPI> — misura esistente: <nome misura>` oppure `- <Nome KPI> — serve nuova misura: <base di calcolo>` (es. `- Fatturato Totale — serve nuova misura: Quantità × Prezzo Unitario`).
 
+Non assumere un valore di dominio non dichiarato nei requisiti (es. quale stringa di `STATO_ORDINE` indica un reso): scrivi la base di calcolo restando ai concetti nominati e segnala il valore mancante come "Da confermare in fase 2 con data-analyst".
+
 **Criterio di uscita**: sono elencati 3-6 KPI, ciascuno marcato come misura esistente o da costruire in fase 4.
 
 ### Round 4 — Numero Pagine, Visual Desiderati e Layout (bozza) + Direzione di Design
@@ -189,5 +191,6 @@ Questo output descrive **cosa serve**, non **come costruirlo**: la modellazione 
 - **Non inventare nomi di tabelle o schema a stella** (es. `FactSales`, `DimDate`, `DimProduct`): un nome di tabella/colonna compare nell'output solo se dichiarato esplicitamente nei requisiti — mai un nome dedotto o inventato ispezionando i file, quello è compito di `data-analyst` in fase 2. Decidere fact/dimension, naming e relazioni del modello resta competenza della fase 4.
 - **Non scrivere una sezione "Relazioni e modello"** o equivalente: le relazioni tra tabelle le stabilisce `semantic-modeler`, non `requirements-analyst`.
 - **Non "concordare" tu KPI o mapping**: per ogni requisito atomico riporta il match solo se dichiarato esplicitamente, altrimenti marca "Da confermare in fase 2" (vedi Mapping Requisiti → Schema Target) — non decidere né verificare l'allineamento al posto di `data-analyst`.
+- **Non inventare valori di dominio di una colonna** (es. quale valore rappresenta "reso", "attivo", ecc.): resta ai concetti dichiarati nei requisiti, segnala il resto come "Da confermare in fase 2 con data-analyst" — ispezionare i valori reali è compito esclusivo di `data-analyst`.
 
 **Gate di approvazione**: criteri di completezza prima di dichiarare il file pronto — tutte le sezioni compilate, intestazioni identiche al template, nessun placeholder vuoto, nessuna sezione duplicata o orfana (vedi [OBBLIGATORIO](#obbligatorio)). La procedura di validazione (chi esegue `validate_requirements.py`, quando richiedere l'approvazione all'utente) è definita in `requirements-analyst.agent.md`, sezione "Fine Intervista" — non va ripetuta qui. Non passare alla fase 2 (`data-analyst`) finché l'utente non approva esplicitamente; se richiede modifiche, rivedi il file e ripeti il gate.

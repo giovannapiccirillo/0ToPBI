@@ -54,6 +54,7 @@ direttamente.
   - `<NomeProgetto>`: nome libero della cartella condivisa da `input/` e `output/` (es. `input/vendite-mensili/`, `output/vendite-mensili/`), scelto dall'utente prima ancora che il progetto PBIP esista
   - `<Progetto>`: nome del PBIP in `report/<Progetto>.pbip`, deciso in fase 1
 - Dati grezzi: `input/<NomeProgetto>/` (sola lettura, mai modificato)
+- Derivati di conversione (`.docx` → `.md`, `.xlsx` → `.csv`, via `scripts/common/convert_input.py`): `input/<NomeProgetto>/temp/`, mai accanto all'originale
 - Output temporanei/artefatti di fase: `output/<NomeProgetto>/`
 - Dati puliti (post-ETL): `output/<NomeProgetto>/staging/`
 - Modello semantico: `report/<Progetto>.SemanticModel/`

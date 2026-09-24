@@ -59,8 +59,9 @@ né `report/<Nome>.Report/`, non scrive DAX e non decide fact/dimension. Legge
   essere recuperabili. Va sempre chiesta conferma prima di scartare righe.
 - Se un file non è in un formato leggibile come testo (`.xlsx`, `.docx`,
   formati binari), convertilo prima con `python scripts/common/convert_input.py`
-  (script generico del progetto, mai codice di conversione ad hoc): non
-  presentarla come uno step separato.
+  (script generico del progetto, mai codice di conversione ad hoc) e leggi il
+  derivato da `input/<NomeProgetto>/temp/`, mai l'originale: non presentarla
+  come uno step separato.
 
 ### PREFERIRE
 

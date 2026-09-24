@@ -33,10 +33,10 @@ La sezione `## Dati Disponibili e Granularità` di
 `output/<NomeProgetto>/requirements.md` (campo `Tipo di DB` /
 `Modalità di connessione`) dice quale sorgente usare:
 
-- **Locale**: file in `input/<NomeProgetto>/` (`.csv`, `.xlsx`, eventualmente
-  convertiti da `.docx` non è pertinente qui — solo i file tabellari). Usa i
-  tool di lettura file standard del progetto (`read`,
-  `python scripts/common/convert_input.py <NomeProgetto>` per i binari).
+- **Locale**: file tabellari in `input/<NomeProgetto>/` (`.csv`, `.xlsx`
+  originali) o i loro derivati `.csv` in `input/<NomeProgetto>/temp/` se
+  convertiti da `.xlsx` binari (`python scripts/common/convert_input.py
+  <NomeProgetto>`); usa i tool di lettura file standard del progetto (`read`).
 - **Fabric Lakehouse**: quando i requisiti indicano una sorgente Fabric
   (Lakehouse/Warehouse/Mirrored DB), usa la skill
   `.github/skills/fabric-lakehouse-consumption/SKILL.md` (MCP

@@ -73,7 +73,8 @@ Target" se presente), poi apri ogni file corrispondente in
 `input/<NomeProgetto>/` per applicare le correzioni già identificate: se è
 binario (`.xlsx`, `.docx`), convertilo prima con
 `python scripts/common/convert_input.py <NomeProgetto>` (lo script generico del
-progetto, mai codice di conversione ad hoc), con la stessa modalità
+progetto, mai codice di conversione ad hoc) e leggi il derivato da
+`input/<NomeProgetto>/temp/`, mai l'originale — con la stessa modalità
 silenziosa già in uso per `input/` — non presentarla come step separato.
 Le anomalie di dominio segnalate da `data-analyst` (valori sospetti nel
 merito, non nel formato) NON vanno corrette automaticamente qui: restano

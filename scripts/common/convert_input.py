@@ -8,7 +8,8 @@
 # scelto dall'utente indipendentemente dal nome del progetto PBIP.
 #
 # Regole (dalla skill powerbi-requirements-gathering):
-# - il convertito va accanto all'originale: <nome>.md per i .docx, <nome>.csv per gli .xlsx
+# - il convertito va in input/<Workdir>/temp/, mai accanto all'originale:
+#   <nome>.md per i .docx, <nome>.csv per gli .xlsx
 #   (un CSV per foglio, <nome>__<foglio>.csv, se il workbook ha più fogli)
 # - se il convertito esiste ed è più recente dell'originale, si riusa (skip) salvo --force
 # - l'originale non viene mai modificato; output sempre UTF-8
@@ -21,6 +22,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+
+
+def temp_dir(src: Path) -> Path:
+    """Cartella input/<Workdir>/temp/ per i derivati di conversione: mai accanto all'originale."""
+    d = src.parent / "temp"
+    d.mkdir(exist_ok=True)
+    return d
 
 
 def docx_to_markdown(src: Path) -> str:
@@ -70,8 +78,9 @@ def xlsx_to_csv(src: Path, force: bool):
                   for name, df in frames.items()}
     results = []
     multi = len(sheets) > 1
+    out_dir = temp_dir(src)
     for name, rows in sheets.items():
-        dest = src.with_name(f"{src.stem}__{name}.csv" if multi else f"{src.stem}.csv")
+        dest = out_dir / (f"{src.stem}__{name}.csv" if multi else f"{src.stem}.csv")
         if not force and dest.exists() and dest.stat().st_mtime >= src.stat().st_mtime:
             results.append((dest, "riusato (già aggiornato)"))
             continue
@@ -86,7 +95,7 @@ def xlsx_to_csv(src: Path, force: bool):
 def convert_one(src: Path, force: bool):
     suffix = src.suffix.lower()
     if suffix == ".docx":
-        dest = src.with_suffix(".md")
+        dest = temp_dir(src) / f"{src.stem}.md"
         if not force and dest.exists() and dest.stat().st_mtime >= src.stat().st_mtime:
             return [(dest, "riusato (già aggiornato)")]
         dest.write_text(docx_to_markdown(src), encoding="utf-8")

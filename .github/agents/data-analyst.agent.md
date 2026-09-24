@@ -75,7 +75,10 @@ locale o Fabric — criteri di scelta ed eventuali criteri di stop in
 
 **Sorgente locale**: converti prima i file binari
 (`python scripts/common/convert_input.py <NomeProgetto>`, mai script di
-conversione ad hoc), poi ispeziona ogni file/foglio rilevante.
+conversione ad hoc): i derivati finiscono in `input/<NomeProgetto>/temp/`,
+mai accanto all'originale. Poi ispeziona ogni file/foglio rilevante (i
+convertiti da `temp/`, gli originali già tabellari direttamente da
+`input/<NomeProgetto>/`).
 
 **Sorgente Fabric**: segui `fabric-lakehouse-consumption/SKILL.md` per
 intero (risoluzione workspace/item, `execute_query`, limiti di query).

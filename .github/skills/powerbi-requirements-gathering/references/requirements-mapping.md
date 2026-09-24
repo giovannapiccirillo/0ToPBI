@@ -27,6 +27,7 @@ Fermati e chiedi — mai ipotesi implicite — in questi casi:
 - **Manca ogni fonte di requisiti**: né documento né testo in chat da cui estrarre requisiti atomici.
 - **Manca la modalità/tipo di connessione al db reale** per la componente locale, quando servirà alla fase 2 (per la componente Fabric la modalità è già `Fabric Lakehouse`: non richiederla di nuovo).
 - **Il requisito stesso è ambiguo o incompleto** indipendentemente dallo schema (es. non è chiaro a quale entità si riferisce, o mescola più esigenze in una voce sola).
+- **Il documento segnala un'informazione come provvisoria** (es. "prima bozza", "da rivedere/confermare con il business o il PM", "TBD"): aggiungi comunque una voce in "Domande Aperte" — mai "Non applicabile" in questo caso.
 
 Le domande vanno sempre riferite al gap specifico, mai un questionario generico. Riportale (se presenti) nella sotto-sezione "Domande Aperte" dentro **Mapping Requisiti → Schema Target** di `output/<NomeProgetto>/requirements.md`.
 

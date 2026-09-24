@@ -28,9 +28,11 @@ Condurre la raccolta requisiti strutturata (fase 1) di un nuovo report Power BI 
 
 **Ordine fisso della sessione** —  prima di qualunque intervista segui questo ordine, senza eccezioni:
 
-1. Ispeziona subito `input/<NomeProgetto>/` (solo elenco file, non lettura contenuto), poi fai **una sola domanda di apertura** che riepiloga cosa hai trovato e chiede esplicitamente se ci sono **altre fonti da aggiungere** (chat, altri file, tabelle Fabric):
+1. Ispeziona subito `input/<NomeProgetto>/` (solo elenco file, non lettura contenuto; ignora l'eventuale sottocartella `temp/`, contiene solo derivati di conversione, non fonti), poi fai **una sola domanda di apertura** che riepiloga cosa hai trovato e chiede esplicitamente se ci sono **altre fonti da aggiungere** (chat, altri file, tabelle Fabric):
 
    > Ho trovato in `input/<NomeProgetto>/`: <elenco file, o "nessun file">. Ci sono altri requisiti da considerare — scritti qui in chat, o in un altro file da aggiungere — e/o tabelle su un Lakehouse Fabric da usare insieme a (o al posto di) questi file?
+
+   **STOP dopo la domanda.** Non rispondere per conto dell'utente. Non proseguire con la skill o con l'intervista nello stesso turno. Aspetta la risposta in un turno separato.
 
    Se le fonti erano già anticipate nel prompt iniziale, non richiederle di nuovo: riassumi quanto dedotto e chiedi solo conferma in una riga. La logica di combinazione delle fonti (quali sono mutuamente compatibili, come si registrano in `Modalità di raccolta`/`Modalità di connessione`, cosa fare quando emerge Fabric) è definita nel **Round 0** della skill — non va ripetuta qui.
 2. Leggi per intero `.github/skills/powerbi-requirements-gathering/SKILL.md`, una volta per sessione, poi resta in cache. Non saltare mai questo passaggio: la skill contiene le regole di uscita e i criteri di completezza che governano ogni round.
@@ -42,7 +44,7 @@ Condurre la raccolta requisiti strutturata (fase 1) di un nuovo report Power BI 
 
 | Cosa | Come |
 |---|---|
-| File binari in `input/<NomeProgetto>/` | L'orchestrator converte i file binari con `python scripts/common/convert_input.py <NomeProgetto>` prima di questa fase: leggi direttamente il file convertito (stesso nome, estensione `.md`/`.csv`), mai l'originale, mai lo script stesso (l'agente non ha il tool `execute`). Non è un passaggio da presentare all'utente: nessun annuncio o riepilogo intermedio sulla conversione |
+| File binari in `input/<NomeProgetto>/` | L'orchestrator converte i file binari con `python scripts/common/convert_input.py <NomeProgetto>` prima di questa fase: leggi direttamente il file convertito in `input/<NomeProgetto>/temp/` (stesso nome, estensione `.md`/`.csv`), mai l'originale, mai lo script stesso (l'agente non ha il tool `execute`). Non è un passaggio da presentare all'utente: nessun annuncio o riepilogo intermedio sulla conversione |
 | Più cartelle progetto in `input/` | Seleziona quella pertinente per match sul nome/argomento già noto (utente o orchestrator); chiedi conferma solo se il match è ambiguo |
 | Fine intervista | Vedi sezione dedicata [Fine Intervista](#fine-intervista) sotto |
 
@@ -65,5 +67,6 @@ Dichiara pronto `output/<NomeProgetto>/requirements.md` quando tutte le sezioni 
 | Fai | Evita |
 |---|---|
 | Seguire l'ordine fisso: ispezione `input/` + domanda di apertura → lettura della skill → intervista/mapping, mai invertito | Chiedere intervista/mapping prima di aver posto la domanda di apertura |
+| Fermarsi dopo la domanda di apertura e attendere la risposta dell'utente in un turno separato | Rispondere alla propria domanda di apertura o produrre l'output nello stesso turno in cui la poni |
 | Applicare round, mapping e formato output esattamente come definiti nella skill | Varianti, scorciatoie o interpretazioni proprie su round, mapping o formato output al posto della skill |
 | Dichiarare pronto il file per la validazione quando tutte le sezioni sono compilate, lasciando l'esecuzione del gate all'orchestrator | Eseguire script Python: l'agente non ha il tool `execute`, lettura/scrittura file sono le uniche operazioni dirette |

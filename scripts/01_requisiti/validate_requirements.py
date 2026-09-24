@@ -33,6 +33,19 @@ def section_body(text, heading):
     return "\n".join(body)
 
 
+def strip_subsections(body):
+    # Esclude eventuali sotto-sezioni (### ...) annidate, es. "Domande Aperte"
+    # dentro "## Mapping Requisiti -> Schema Target": il loro contenuto (che
+    # può legittimamente contenere "Non applicabile") non deve influenzare i
+    # controlli sulla sezione padre.
+    lines = []
+    for l in body.splitlines():
+        if re.match(r"^### ", l):
+            break
+        lines.append(l)
+    return "\n".join(lines)
+
+
 def main():
     if len(sys.argv) != 2:
         print("Uso: python scripts/validate_requirements.py <Workdir>")
@@ -117,14 +130,15 @@ def main():
             p.name for p in input_dir.iterdir() if p.suffix.lower() in (".csv", ".xlsx")
         )
     body = section_body(output_text, MAPPING_HEADING)
-    if body is not None and tabular:
-        if re.search(r"non applicabile", body, re.IGNORECASE):
+    mapping_body = strip_subsections(body) if body is not None else None
+    if mapping_body is not None and tabular:
+        if re.search(r"non applicabile", mapping_body, re.IGNORECASE):
             errors.append(
                 f"Sezione Mapping dichiarata 'Non applicabile' ma in input/{workdir}/ ci sono file tabellari "
                 f"({', '.join(tabular)}): lo schema si ricava dalle intestazioni, il mapping va compilato."
             )
         data_rows = [
-            l for l in body.splitlines()
+            l for l in mapping_body.splitlines()
             if l.startswith("|") and not re.match(r"^\|[\s\-|]+\|$", l)
             and "Requisito atomico" not in l
         ]

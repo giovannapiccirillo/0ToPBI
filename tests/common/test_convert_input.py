@@ -44,11 +44,11 @@ class TestConvertInput(unittest.TestCase):
         self.assertIn("| KPI | Formula |", md)
         self.assertIn("| Fatturato | Q x P |", md)
 
-    def test_convert_one_scrive_md_accanto_e_riusa(self):
+    def test_convert_one_scrive_md_in_temp_e_riusa(self):
         src = self.dir / "requisiti.docx"
         make_docx(src)
         [(dest, status)] = ci.convert_one(src, force=False)
-        self.assertEqual(dest, src.with_suffix(".md"))
+        self.assertEqual(dest, self.dir / "temp" / "requisiti.md")
         self.assertEqual(status, "convertito")
         self.assertTrue(dest.exists())
         [(_, status2)] = ci.convert_one(src, force=False)  # seconda chiamata: riuso
@@ -75,6 +75,7 @@ class TestConvertInput(unittest.TestCase):
         results = ci.xlsx_to_csv(src, force=False)
         self.assertEqual(len(results), 1)
         dest, status = results[0]
+        self.assertEqual(dest, self.dir / "temp" / "vendite.csv")
         self.assertEqual(status, "convertito")
         text = dest.read_text(encoding="utf-8")
         self.assertIn("OrderID,Amount", text)
